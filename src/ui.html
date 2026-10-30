@@ -1,0 +1,3944 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>ISHARD 작업실</title>
+    <style>
+      :root {
+        --bg: #f6f3ec;
+        --fg: #2b2a26;
+        --mut: #6f6b60;
+        --card: #fff;
+        --ln: #e3ddd0;
+        --ac: #5f6849;
+        --acs: #eef0e6;
+        --bad: #a4402f;
+        --badbg: #fbeeea;
+        --warn: #8a6a1c;
+        --warnbg: #fbf5e4;
+        --ok: #3f6b3a;
+        --okbg: #eef5ea;
+        box-sizing: border-box;
+        padding-top: env(safe-area-inset-top, 0px);
+        color-scheme: light;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root:not([data-theme="light"]) {
+          --bg: #1d1c19;
+          --fg: #ece8dc;
+          --mut: #a7a293;
+          --card: #262520;
+          --ln: #3a382f;
+          --ac: #a5b07f;
+          --acs: #2f3326;
+          --bad: #e08a78;
+          --badbg: #3a2621;
+          --warn: #d9b867;
+          --warnbg: #352d1a;
+          --ok: #9cc48f;
+          --okbg: #22301f;
+          color-scheme: dark;
+        }
+      }
+      :root[data-theme="dark"] {
+        --bg: #1d1c19;
+        --fg: #ece8dc;
+        --mut: #a7a293;
+        --card: #262520;
+        --ln: #3a382f;
+        --ac: #a5b07f;
+        --acs: #2f3326;
+        --bad: #e08a78;
+        --badbg: #3a2621;
+        --warn: #d9b867;
+        --warnbg: #352d1a;
+        --ok: #9cc48f;
+        --okbg: #22301f;
+        color-scheme: dark;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+      }
+      body {
+        background: var(--bg);
+        color: var(--fg);
+        font:
+          15px/1.5 -apple-system,
+          "Noto Sans KR",
+          "Malgun Gothic",
+          sans-serif;
+      }
+      main {
+        max-width: 860px;
+        margin: 0 auto;
+        padding: 14px 16px 32px;
+      }
+      h1 {
+        font-size: 18px;
+        margin: 4px 0 12px;
+      }
+      h2 {
+        font-size: 14px;
+        margin: 14px 0 4px;
+        color: var(--mut);
+      }
+      .card {
+        background: var(--card);
+        border: 1px solid var(--ln);
+        border-radius: 12px;
+        padding: 12px;
+        margin: 8px 0;
+      }
+      .mut {
+        color: var(--mut);
+        font-size: 13px;
+      }
+      .bad {
+        color: var(--bad);
+      }
+      .warn {
+        color: var(--warn);
+        font-size: 13px;
+      }
+      #msg {
+        background: var(--badbg);
+        color: var(--bad);
+        position: sticky;
+        top: env(safe-area-inset-top, 0px);
+        z-index: 5;
+      }
+      .okm {
+        background: var(--okbg);
+        color: var(--ok);
+        border-color: transparent;
+      }
+      .lock {
+        color: var(--mut);
+        background: transparent;
+        border-style: dashed;
+      }
+      .warnbox {
+        background: var(--warnbg);
+        color: var(--warn);
+        border-color: transparent;
+        font-size: 13px;
+      }
+      button,
+      select {
+        font: inherit;
+        border: 1px solid var(--ln);
+        background: var(--card);
+        color: var(--fg);
+        border-radius: 8px;
+        padding: 8px 12px;
+        min-height: 40px;
+        cursor: pointer;
+      }
+      button:disabled,
+      input:disabled,
+      textarea:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+      }
+      button.p {
+        background: var(--ac);
+        border-color: var(--ac);
+        color: #fff;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root:not([data-theme="light"]) button.p {
+          color: #1d1c19;
+        }
+      }
+      :root[data-theme="dark"] button.p {
+        color: #1d1c19;
+      }
+      button:focus-visible,
+      select:focus-visible,
+      input:focus-visible,
+      textarea:focus-visible,
+      summary:focus-visible {
+        outline: 2px solid var(--ac);
+        outline-offset: 2px;
+      }
+      textarea,
+      input[type="text"] {
+        width: 100%;
+        font: inherit;
+        background: var(--bg);
+        color: var(--fg);
+        border: 1px solid var(--ln);
+        border-radius: 8px;
+        padding: 8px;
+        margin: 4px 0;
+      }
+      textarea {
+        min-height: 90px;
+        font-size: 13px;
+      }
+      input[type="checkbox"] {
+        width: 20px;
+        height: 20px;
+        accent-color: var(--ac);
+      }
+      .tabs {
+        display: flex;
+        gap: 6px;
+        overflow-x: auto;
+        padding: 2px 0 6px;
+        scrollbar-width: none;
+      }
+      .tabs::-webkit-scrollbar {
+        display: none;
+      }
+      .tabs button {
+        white-space: nowrap;
+      }
+      .tabs .on {
+        background: var(--ac);
+        color: #fff;
+        border-color: var(--ac);
+      }
+      .tabs.top {
+        margin-bottom: 8px;
+      }
+      .n {
+        display: inline-block;
+        min-width: 18px;
+        padding: 0 5px;
+        border-radius: 9px;
+        background: var(--bad);
+        color: #fff;
+        font-size: 11px;
+        line-height: 18px;
+        text-align: center;
+        margin-left: 2px;
+      }
+      .row {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        align-items: center;
+      }
+      .tag {
+        font-size: 12px;
+        border: 1px solid var(--ln);
+        border-radius: 99px;
+        padding: 1px 8px;
+        white-space: nowrap;
+      }
+      .tag.done {
+        background: var(--okbg);
+        color: var(--ok);
+        border-color: transparent;
+      }
+      .tag.wait {
+        color: var(--mut);
+        border-style: dashed;
+      }
+      .tag.bad {
+        color: var(--bad);
+        border-color: var(--bad);
+      }
+      .cid {
+        overflow-wrap: anywhere;
+      }
+      .next {
+        margin: 4px 0 8px;
+      }
+      .hdr {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+      .hdr b {
+        flex: 1;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .pre {
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+      }
+      .vid {
+        font-size: 11px;
+        overflow-wrap: anywhere;
+      }
+      .ver.appr {
+        border-color: var(--ac);
+        box-shadow: 0 0 0 1px var(--ac) inset;
+      }
+      .seg {
+        display: inline-flex;
+        border: 1px solid var(--ln);
+        border-radius: 10px;
+        overflow: hidden;
+        margin: 6px 0;
+      }
+      .seg button {
+        border: 0;
+        border-radius: 0;
+      }
+      .seg .on {
+        background: var(--acs);
+        font-weight: 600;
+      }
+      .cmp {
+        display: grid;
+        grid-auto-flow: column;
+        grid-auto-columns: minmax(260px, 1fr);
+        gap: 8px;
+        overflow-x: auto;
+        scroll-snap-type: x mandatory;
+        padding-bottom: 4px;
+      }
+      .cmp > .card {
+        scroll-snap-align: start;
+        margin: 0;
+      }
+      .cmp.two {
+        grid-auto-columns: minmax(220px, 1fr);
+        margin: 8px 0;
+      }
+      .kv {
+        display: grid;
+        grid-template-columns: max-content 1fr;
+        gap: 2px 10px;
+        margin: 8px 0 0;
+        font-size: 13px;
+      }
+      .kv dt {
+        color: var(--mut);
+      }
+      .kv dd {
+        margin: 0;
+      }
+      .sw {
+        width: 64px;
+        aspect-ratio: 9/16;
+        border-radius: 8px;
+        border: 2px solid var(--ln);
+        display: flex;
+        align-items: end;
+        justify-content: center;
+        font-size: 10px;
+        padding: 2px;
+        text-align: center;
+        color: #2b2a26;
+      }
+      .sw.sel {
+        border-color: var(--ac);
+        outline: 2px solid var(--ac);
+      }
+      .cand {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        width: 84px;
+        align-items: stretch;
+      }
+      .cand button {
+        white-space: nowrap;
+        padding: 8px 4px;
+        font-size: 14px;
+      }
+      .cand .sw {
+        width: 84px;
+      }
+      .note {
+        font-size: 11px;
+        line-height: 1.3;
+      }
+      input[type="number"] {
+        width: 100%;
+        font: inherit;
+        background: var(--bg);
+        color: var(--fg);
+        border: 1px solid var(--ln);
+        border-radius: 8px;
+        padding: 8px;
+        margin-top: 2px;
+      }
+      .scores {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));
+        gap: 6px;
+        margin-top: 8px;
+        align-items: end;
+      }
+      .scores label,
+      .ncg label {
+        display: flex;
+        flex-direction: column;
+        font-size: 12px;
+        color: var(--mut);
+      }
+      .ncg {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 6px 8px;
+        margin: 8px 0;
+      }
+      .ncg .w {
+        grid-column: 1/-1;
+      }
+      .ncg select {
+        width: 100%;
+      }
+      .regrow {
+        display: flex;
+        gap: 6px;
+        align-items: center;
+        margin: 4px 0;
+      }
+      .regrow input {
+        margin: 0;
+      }
+      .who {
+        text-align: right;
+        margin: -4px 0 4px;
+      }
+      details.ec {
+        margin-top: 8px;
+        font-size: 14px;
+      }
+      details.ec ul {
+        margin: 6px 0;
+        padding-left: 18px;
+      }
+      details.ec li {
+        margin: 2px 0;
+      }
+      details.rv {
+        margin-top: 6px;
+      }
+      details summary {
+        cursor: pointer;
+      }
+      details.rv summary {
+        display: inline-flex;
+        align-items: center;
+        min-height: 40px;
+        padding: 0 12px;
+        border: 1px solid var(--ln);
+        border-radius: 8px;
+        list-style: none;
+      }
+      details.rv summary::-webkit-details-marker {
+        display: none;
+      }
+      details.rv[open] summary {
+        margin-bottom: 6px;
+      }
+      .cal {
+        display: grid;
+        grid-template-columns: repeat(7, minmax(0, 1fr));
+        gap: 2px;
+      }
+      .cal > div {
+        min-height: 64px;
+        border: 1px solid var(--ln);
+        border-radius: 6px;
+        padding: 2px;
+        font-size: 11px;
+        overflow: hidden;
+        min-width: 0;
+      }
+      .cal .h {
+        min-height: 0;
+        border: 0;
+        text-align: center;
+        color: var(--mut);
+      }
+      .chip {
+        display: block;
+        width: 100%;
+        font-size: 10px;
+        min-height: 0;
+        padding: 2px;
+        margin-top: 2px;
+        text-align: left;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .chip.action {
+        border-color: var(--ac);
+      }
+      .chip.waiting {
+        border-style: dashed;
+        color: var(--mut);
+      }
+      .tablewrap {
+        overflow-x: auto;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+      }
+      td,
+      th {
+        border-bottom: 1px solid var(--ln);
+        padding: 6px 4px;
+        text-align: left;
+        vertical-align: top;
+      }
+      th {
+        color: var(--mut);
+        font-weight: 500;
+      }
+      td button {
+        white-space: nowrap;
+        padding: 8px 10px;
+      }
+      .sel {
+        background: var(--acs);
+        border-color: transparent;
+      }
+      .bp {
+        display: grid;
+        gap: 8px;
+        margin-top: 8px;
+      }
+      .feed {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 3px;
+      }
+      .tile {
+        aspect-ratio: 3/4;
+        border-radius: 4px;
+        border: 1px dashed var(--ln);
+        background: var(--card);
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        align-items: flex-start;
+        padding: 6px;
+        min-height: 0;
+        color: var(--fg);
+      }
+      .tile span {
+        font-size: 11px;
+        color: var(--mut);
+      }
+      .tile small {
+        font-size: 11px;
+        background: var(--card);
+        border-radius: 4px;
+        padding: 1px 4px;
+      }
+      .logrow {
+        display: grid;
+        grid-template-columns: 96px 1fr;
+        gap: 8px;
+        padding: 6px 0;
+        border-bottom: 1px solid var(--ln);
+        font-size: 13px;
+      }
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(84px, 1fr));
+        gap: 8px;
+        margin: 4px 0 8px;
+      }
+      .brief h2 {
+        font-size: 14px;
+        margin: 14px 0 6px;
+      }
+      .brief .src {
+        padding: 6px 0;
+        border-top: 1px solid var(--ln);
+      }
+      .brief a {
+        color: var(--ac);
+      }
+      .brief ul {
+        margin: 4px 0;
+        padding-left: 18px;
+      }
+      .stats button.late {
+        border-color: var(--bad);
+        background: var(--badbg);
+        color: var(--bad);
+      }
+      .stats button {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 10px 12px;
+        min-height: 64px;
+      }
+      .stats b {
+        font-size: 22px;
+        line-height: 1.1;
+      }
+      .stats span {
+        font-size: 12px;
+        color: var(--mut);
+      }
+      .agenda {
+        display: grid;
+        grid-template-columns: 64px 1fr auto;
+        gap: 8px;
+        align-items: center;
+        width: 100%;
+        text-align: left;
+        margin: 4px 0;
+        padding: 10px;
+      }
+      .agenda .ad {
+        font-size: 13px;
+        color: var(--mut);
+      }
+      .agenda .at {
+        min-width: 0;
+        overflow: hidden;
+      }
+      .agenda small {
+        display: block;
+        color: var(--mut);
+        font-size: 11px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .bnav,
+      .sheet {
+        display: none;
+      }
+      @media (max-width: 700px) {
+        main {
+          padding-bottom: calc(84px + env(safe-area-inset-bottom, 0px));
+        }
+        .tabs.top {
+          display: none;
+        }
+        .bnav {
+          display: grid;
+          grid-template-columns: repeat(4, 1fr);
+          position: fixed;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          z-index: 10;
+          background: var(--card);
+          border-top: 1px solid var(--ln);
+          padding: 6px 8px calc(6px + env(safe-area-inset-bottom, 0px));
+        }
+        .bnav button {
+          border: 0;
+          background: transparent;
+          min-height: 48px;
+          font-size: 14px;
+          border-radius: 10px;
+        }
+        .bnav .on {
+          background: var(--acs);
+          color: var(--ac);
+          font-weight: 600;
+        }
+        .sheet {
+          display: grid;
+          gap: 6px;
+          position: fixed;
+          left: 8px;
+          right: 8px;
+          bottom: calc(68px + env(safe-area-inset-bottom, 0px));
+          z-index: 11;
+          background: var(--card);
+          border: 1px solid var(--ln);
+          border-radius: 14px;
+          padding: 8px;
+          box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+        }
+        .sheet button {
+          text-align: left;
+          min-height: 48px;
+        }
+        .cmp {
+          grid-auto-columns: 86%;
+        }
+        .cmp.two {
+          grid-auto-flow: row;
+          grid-auto-columns: auto;
+          overflow: visible;
+        }
+        .cmp.two > .card + .card {
+          margin-top: 0;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main id="app"></main>
+    <script>
+      (() => {
+        var xe = Object.freeze({
+            failure: "실패 회피형",
+            statusquo: "현재 제품 유지형",
+            tradeoff: "조건 충돌형",
+            burden: "관리 부담형",
+            proof: "근거 확인형",
+            confusion: "정보 혼란형",
+          }),
+          it = Object.freeze(["empathy", "barrier", "reframe", "product_evidence", "decision"]),
+          or = Object.freeze(["psychology", "fit", "evidence", "flow", "novelty"]),
+          nr = 2e4,
+          E = (e, t = 1200) => (typeof e == "string" ? e.trim().slice(0, t) : ""),
+          L = (e) => e !== null && typeof e == "object" && !Array.isArray(e),
+          ir = (e, t) => Object.prototype.hasOwnProperty.call(e, t);
+        function at(e) {
+          if (!L(e) || JSON.stringify(e).length > nr) throw Error("기획 JSON 객체 또는 20KB 이하 용량을 확인해주세요.");
+          let t = e.core || {},
+            r = e.persona || {},
+            s = e.fit || {},
+            o = e.quality || {};
+          if (!L(t) || !L(r) || !L(s) || !L(o)) throw Error("기획 항목은 객체여야 합니다.");
+          let n = E(r.type, 32);
+          if (!ir(xe, n)) throw Error("6가지 구매심리 유형 중 하나를 선택해주세요.");
+          let i = Array.isArray(e.flow) ? e.flow : [];
+          if (i.length > 5 || i.some((m, f) => !L(m) || it[f] !== m.stage))
+            throw Error("콘텐츠 전개는 정해진 순서의 5단계를 사용해주세요.");
+          let a = {},
+            c = L(o.scores) ? o.scores : {};
+          for (let m of or) {
+            let f = c[m] ?? 0;
+            if (!Number.isInteger(f) || f < 0 || f > 20) throw Error("기획 평가는 항목별 0~20점만 가능합니다.");
+            a[m] = f;
+          }
+          let d = E(s.verification, 32) || "pending";
+          if (!["pending", "verified", "insufficient"].includes(d)) throw Error("제품 검증 상태가 올바르지 않습니다.");
+          let l = E(o.claimReview, 20) || "pending",
+            p = E(o.duplicateReview, 20) || "pending";
+          if (!["pending", "pass", "fail"].includes(l) || !["pending", "pass", "fail"].includes(p))
+            throw Error("검수 상태가 올바르지 않습니다.");
+          let h = E(r.evidenceStatus, 32) || "hypothesis";
+          if (!["hypothesis", "customer_data"].includes(h)) throw Error("고객 근거 구분이 잘못되었습니다.");
+          return {
+            version: 2,
+            core: {
+              objective: E(t.objective),
+              purchaseQuestion: E(t.purchaseQuestion),
+              barrier: E(t.barrier),
+              answer: E(t.answer),
+              cta: E(t.cta),
+            },
+            persona: {
+              type: n,
+              trigger: E(r.trigger),
+              desired: E(r.desired),
+              preserve: E(r.preserve),
+              currentAlternative: E(r.currentAlternative),
+              objection: E(r.objection),
+              evidenceStatus: h,
+            },
+            fit: {
+              customerCondition: E(s.customerCondition),
+              productFeature: E(s.productFeature),
+              selectionReason: E(s.selectionReason),
+              verification: d,
+              claimLimit: E(s.claimLimit),
+              sourceIds: Array.isArray(s.sourceIds)
+                ? s.sourceIds
+                    .filter((m) => typeof m == "string")
+                    .slice(0, 12)
+                    .map((m) => E(m, 250))
+                : [],
+            },
+            flow: it.map((m, f) => ({ stage: m, text: E(i[f]?.text) })),
+            quality: { scores: a, claimReview: l, duplicateReview: p, humanConfirmed: o.humanConfirmed === !0 },
+          };
+        }
+        function Oe(e, t = []) {
+          if (!e) return { ready: !1, reasons: ["새 구매심리 기획이 없습니다."] };
+          let r = at(e),
+            s = [];
+          ((!r.core.purchaseQuestion || !r.core.barrier || !r.core.answer) &&
+            s.push("핵심 구매 질문·장벽·답변을 입력해주세요."),
+            (!r.persona.objection || !r.persona.desired) && s.push("고객의 원하는 조건과 구매 반론을 작성해주세요."),
+            (!r.fit.productFeature || !r.fit.selectionReason) &&
+              s.push("아이샤드 제품 특징과 선택 이유를 작성해주세요."),
+            r.fit.verification !== "verified" && s.push("제품과 고객의 연결 근거를 검증해주세요."),
+            (Array.isArray(t) ? t.filter((a) => L(a) && E(a.fact) && E(a.source)) : []).some(
+              (a) => r.fit.sourceIds.includes(E(a.source, 250)) || r.fit.sourceIds.includes(E(a.id, 250)),
+            ) || s.push("기존 공식 제품 사실·출처와 일치하는 sourceIds를 입력해주세요."),
+            r.flow.some((a) => !a.text) && s.push("5단계 전개를 모두 작성해주세요."),
+            (r.quality.claimReview !== "pass" || r.quality.duplicateReview !== "pass") &&
+              s.push("표현 검수와 중복 검수를 완료해주세요."),
+            r.quality.humanConfirmed !== !0 && s.push("검증된 근거와 표현을 사용자 본인이 확인해주세요."));
+          let i = Object.values(r.quality.scores).reduce((a, c) => a + c, 0);
+          return (
+            i < 80 && s.push("기획 품질 평가 80점 이상을 확인해주세요."),
+            { ready: s.length === 0, score: i, reasons: s }
+          );
+        }
+        function ke(e, { content_id: t, strategy: r }) {
+          let s = e.contents.find((i) => i.id === t);
+          if (!s) throw Error("수정할 기획을 찾지 못했습니다.");
+          let o = at(r),
+            n = L(s.plan) ? s.plan : {};
+          return (
+            (s.plan = { ...n, strategyV2: o }),
+            { content_id: s.id, planning_readiness: Oe(o, s.plan.productFacts) }
+          );
+        }
+        function ce(e) {
+          if (!Array.isArray(e) || e.length < 1 || e.length > 20)
+            throw Error("storyboard: 장면을 1~20개 배열로 입력해주세요.");
+          let t = 0,
+            r = e.map((s, o) => {
+              let n = "storyboard[" + o + "]";
+              if (!s || typeof s != "object" || Array.isArray(s)) throw Error(n + ": 장면 객체가 필요합니다.");
+              let i = Object.keys(s).filter((a) => !["scene_id", "duration_seconds", "image", "motion"].includes(a));
+              if (i.length) throw Error(n + ": 지원하지 않는 항목 " + i.join(", "));
+              if (s.scene_id !== "scene-" + (o + 1))
+                throw Error(n + ".scene_id: 장면 순서대로 scene-" + (o + 1) + "을 입력해주세요.");
+              if (
+                typeof s.duration_seconds != "number" ||
+                !Number.isFinite(s.duration_seconds) ||
+                s.duration_seconds < 0.1 ||
+                s.duration_seconds > 60
+              )
+                throw Error(n + ".duration_seconds: 0.1~60초의 숫자가 필요합니다.");
+              for (let a of ["image", "motion"])
+                if (typeof s[a] != "string" || !s[a].trim() || s[a].length > 2e3)
+                  throw Error(n + "." + a + ": 1~2,000자의 설명을 입력해주세요.");
+              return (
+                (t += s.duration_seconds),
+                { scene_id: s.scene_id, duration_seconds: s.duration_seconds, image: s.image, motion: s.motion }
+              );
+            });
+          if (t > 60 + 1e-9) throw Error("storyboard: 장면 시간의 합계는 60초 이내로 입력해주세요.");
+          return r;
+        }
+        function Ne(e) {
+          return e.map(
+            (t, r) =>
+              "장면 " +
+              (r + 1) +
+              " · " +
+              t.scene_id +
+              " · " +
+              t.duration_seconds +
+              `초
+이미지: ` +
+              t.image +
+              `
+영상 움직임: ` +
+              t.motion,
+          ).join(`
+
+`);
+        }
+        function ar(e, t = "") {
+          if (!e || typeof e != "object" || Array.isArray(e))
+            throw Error("JSON 한 개의 객체를 입력해주세요. A/B/C 중 한 안씩 가져올 수 있습니다.");
+          let r = Object.keys(e).filter((o) => !["content_id", "script", "caption", "storyboard"].includes(o));
+          if (r.length)
+            throw Error(
+              "지원하지 않는 항목: " +
+                r.join(", ") +
+                ". content_id, script, caption만 사용해주세요. 과거 storyboard 키는 가져오기를 지원합니다.",
+            );
+          if (e.content_id !== void 0 && (typeof e.content_id != "string" || !e.content_id.trim()))
+            throw Error("content_id: 콘텐츠 ID를 문자열로 입력해주세요.");
+          if (t && e.content_id !== void 0 && e.content_id !== t)
+            throw Error("content_id 불일치: 현재 콘텐츠는 " + t + "입니다. 다른 콘텐츠의 JSON은 입력하지 않습니다.");
+          if (typeof e.script != "string" || !e.script.trim() || e.script.length > 2e4)
+            throw Error("script: 대본을 1~20,000자의 문자열로 입력해주세요.");
+          if (typeof e.caption != "string" || e.caption.length > 8e3)
+            throw Error('caption: 8,000자 이내의 문자열이 필요합니다. 캡션이 없으면 ""를 입력해주세요.');
+          let s = e.storyboard === void 0 ? null : ce(e.storyboard);
+          if (s && Ne(s).length > 2e4) throw Error("storyboard: 장면 설명 전체는 20,000자 이내로 입력해주세요.");
+          return {
+            content_id: t || e.content_id || "",
+            script: e.script,
+            caption: e.caption,
+            ...(s ? { storyboard: s } : {}),
+          };
+        }
+        function Ce(e, t = "") {
+          if (typeof e != "string" || !e.trim()) throw Error("JSON 코드를 먼저 붙여넣어주세요.");
+          if (e.length > 12e4) throw Error("JSON 코드는 120,000자 이내로 입력해주세요.");
+          let r = e.trim();
+          if (r.startsWith("```")) {
+            let o = /^```(?:json)?\s*\n([\s\S]*?)\n```\s*$/i.exec(
+              r.replace(
+                /\r\n/g,
+                `
+`,
+              ),
+            );
+            if (!o) throw Error("JSON 코드블록 한 개만 붙여넣어주세요. A/B/C를 한꺼번에 가져올 수 없습니다.");
+            r = o[1];
+          }
+          let s;
+          try {
+            s = JSON.parse(r);
+          } catch (o) {
+            throw Error("JSON 형식 오류: " + o.message + " — 큰따옴표·쉼표·괄호를 확인해주세요.");
+          }
+          return ar(s, t);
+        }
+        function De(e) {
+          let t = 0;
+          return e.map((r) => {
+            let s = t;
+            t += r.duration_seconds;
+            let o = (n) => String(Number(n.toPrecision(12)));
+            return {
+              timing: o(s) + "s-" + o(t) + "s",
+              visual: r.image,
+              motion: r.motion,
+              sourceSceneId: r.scene_id,
+              subtitle: "",
+              prompt: "",
+              reference: "",
+            };
+          });
+        }
+        function ct(e, t) {
+          return !!e?.approvalHolds?.[t];
+        }
+        function dt(e, t, r = new Date().toISOString()) {
+          let s = (e.contents || []).find((i) => i.id === t.content_id);
+          if (!s) throw Error("콘텐츠를 찾지 못했습니다.");
+          if (e.state.approvalHolds?.[s.id]) throw Error("이미 확정이 해제된 원고입니다.");
+          let o = e.state.approvals?.[s.id],
+            n =
+              o &&
+              s.reviews.some(
+                (i) => i.version === o.version && JSON.stringify(i.sections) === JSON.stringify(o.sections),
+              )
+                ? o
+                : s.reviews.find((i) => i.version === s.originalVersion && i.sourceApproved);
+          if (!n) throw Error("해제할 확정 원고가 없습니다.");
+          if (typeof t.version != "string" || n.version !== t.version)
+            throw Error("확정 원고가 변경되었습니다. 새로고침 후 확인해주세요.");
+          return (
+            (e.state.approvalHolds ||= {}),
+            (e.state.approvalHolds[s.id] = { version: n.version, at: r }),
+            o &&
+              ((e.state.approvalHistory ||= []),
+              e.state.approvalHistory.push({ contentId: s.id, ...structuredClone(o) })),
+            delete e.state.approvals[s.id],
+            e.state.events.push({
+              at: r,
+              message: s.product + " · " + n.version + " 원고 확정 해제 (원고·제작물 유지)",
+            }),
+            { content_id: s.id, version: n.version, released: !0 }
+          );
+        }
+        function qe(e, t) {
+          e.approvalHolds && delete e.approvalHolds[t];
+        }
+        function Ve(e, t, r = new Date().toISOString()) {
+          let s = (e.contents || []).find((m) => m.id === t.content_id);
+          if (!s) throw Error("콘텐츠를 찾지 못했습니다.");
+          let o = t.script,
+            n = t.caption ?? "",
+            i = t.storyboard_scenes === void 0 ? null : ce(t.storyboard_scenes);
+          if (i && s.format !== "Reel") throw Error("장면 JSON은 릴스에서만 입력할 수 있습니다.");
+          let a = i ? Ne(i) : "",
+            c = t.storyboard_text ?? a;
+          if (typeof o != "string" || !o.trim() || o.length > 2e4) throw Error("대본은 1~20,000자로 입력해주세요.");
+          if (typeof n != "string" || n.length > 8e3) throw Error("캡션은 8,000자 이내로 작성해주세요.");
+          if (typeof c != "string" || c.length > 2e4) throw Error("스토리보드글은 20,000자 이내로 작성해주세요.");
+          if (i && c !== a)
+            throw Error("스토리보드글과 장면 JSON이 다릅니다. JSON을 다시 분리하거나 직접 입력한 글로 저장해주세요.");
+          let d = "USER-" + r.replace(/[^0-9]/g, "").slice(0, 14),
+            l = d,
+            p = 2;
+          for (; s.reviews.some((m) => m.version === l);) l = d + "-" + p++;
+          let h =
+            s.format === "Carousel"
+              ? o
+                  .split(/\n\s*\n/)
+                  .filter((m) => m.trim())
+                  .map((m, f) => ({ number: f + 1, heading: f === 0 ? "표지" : "슬라이드 " + (f + 1), text: m }))
+              : [];
+          if (h.length > 30) throw Error("캐러셀은 최대 30장까지 입력할 수 있습니다.");
+          let I = [{ heading: "사용자가 직접 작성한 대본", text: o }];
+          return (
+            s.reviews.push({
+              version: l,
+              sections: I,
+              slides: h,
+              caption: n,
+              ...(s.format === "Reel" && c ? { storyboardText: c } : {}),
+              ...(i ? { storyboardScenes: i } : {}),
+              sourceApproved: !1,
+              author: "user",
+              createdAt: r,
+            }),
+            e.state.events.push({ at: r, message: s.product + " · 직접 작성한 대본 " + l + " 저장 (승인 대기)" }),
+            { content_id: s.id, version: l, format: s.format }
+          );
+        }
+        var de = (e, t) => JSON.stringify(e) === JSON.stringify(t);
+        function R(e, t) {
+          if (e.state?.approvalHolds?.[t.id]) return null;
+          let r = e.state.approvals[t.id];
+          if (r) return t.reviews.some((o) => o.version === r.version && de(o.sections, r.sections)) ? r : null;
+          let s = t.reviews.find((o) => o.version === t.originalVersion && o.sourceApproved);
+          return s ? { version: s.version, sections: s.sections, source: "legacy" } : null;
+        }
+        function P(e, t) {
+          let r = e.filter(
+              (d) =>
+                d.snapshot?.contentId === t.snapshot.contentId &&
+                d.snapshot.version === t.snapshot.version &&
+                !d.cancelledAt &&
+                !["cancelled", "changed"].includes(d.status),
+            ),
+            s =
+              r
+                .filter((d) => !d.parentId)
+                .sort((d, l) => l.slots.length - d.slots.length || l.createdAt.localeCompare(d.createdAt))[0] || t,
+            o = [
+              s,
+              ...r
+                .filter((d) => d.id !== s.id)
+                .sort((d, l) => d.createdAt.localeCompare(l.createdAt) || d.id.localeCompare(l.id)),
+            ],
+            i = [...new Set(o.flatMap((d) => d.slots.map((l) => l.id)))].map((d) => {
+              let l = o.flatMap((g) => g.slots).find((g) => g.id === d),
+                p = [];
+              for (let g of o) {
+                let S = g.slots.find((T) => T.id === d && T.asset?.driveUrl);
+                S && (p.some((T) => T.slot.asset.driveUrl === S.asset.driveUrl) || p.push({ request: g, slot: S }));
+              }
+              p.sort(
+                (g, S) =>
+                  (g.request.id === s.id ? -1 : S.request.id === s.id ? 1 : 0) ||
+                  (g.slot.asset.savedAt || g.request.createdAt).localeCompare(
+                    S.slot.asset.savedAt || S.request.createdAt,
+                  ) ||
+                  g.request.createdAt.localeCompare(S.request.createdAt),
+              );
+              let h = o.filter((g) => g.slots.some((S) => S.id === d)),
+                I = JSON.stringify(
+                  h
+                    .map((g) => {
+                      let S = g.slots.find((T) => T.id === d);
+                      return [g.id, S.asset?.previewKey || "", S.asset?.driveUrl || ""];
+                    })
+                    .sort((g, S) => g[0].localeCompare(S[0])),
+                ),
+                m = s.imageSelections?.[d] || s.selectedImages?.[d],
+                f =
+                  m &&
+                  p.find(
+                    (g) => g.request.id === m.requestId && (!m.previewKey || g.slot.asset.previewKey === m.previewKey),
+                  ),
+                D = h
+                  .flatMap((g) => {
+                    let S = g.slots.find((T) => T.id === d);
+                    return g.parentId ? [S.asset?.savedAt || g.createdAt] : [];
+                  })
+                  .filter(Boolean)
+                  .sort()
+                  .at(-1),
+                F =
+                  f &&
+                  (m.candidateSignature
+                    ? m.candidateSignature === I
+                    : m.seenRevisionIds
+                      ? de(
+                          m.seenRevisionIds,
+                          h
+                            .filter((g) => g.parentId)
+                            .map((g) => g.id)
+                            .sort(),
+                        )
+                      : !D || (!!m.selectedAt && m.selectedAt >= D)),
+                Y = m ? (F ? f : null) : p.length === 1 && !h.some((g) => g.parentId) ? p[0] : null,
+                ae = Y || p[p.length - 1] || { request: s, slot: l };
+              return {
+                id: d,
+                original: l,
+                candidates: p,
+                selected: Y,
+                display: ae,
+                candidateSignature: I,
+                pending: h.some((g) => !g.slots.find((S) => S.id === d)?.asset),
+              };
+            }),
+            a = r.find((d) => !d.slots.length || d.slots.some((l) => !l.asset)),
+            c = i.some((d) => !d.selected);
+          return {
+            root: s,
+            family: r,
+            slots: i,
+            pending: a,
+            needsSelection: c,
+            ready: i.length > 0 && !a && !c && !!s.reviewedAt,
+          };
+        }
+        function q(e, t, r) {
+          let s = (e.productionRequests || []).filter(
+              (l) =>
+                l.snapshot?.contentId === t.id &&
+                l.snapshot.version === r.version &&
+                !["cancelled", "changed"].includes(l.status) &&
+                !l.cancelledAt,
+            ),
+            o = s.find((l) => !l.parentId);
+          if (o) {
+            let l = P(s, o);
+            return {
+              ...l,
+              unchecked: l.needsSelection || !l.root.reviewedAt ? l.root : null,
+              urls: l.slots.map((p) => p.selected?.slot.asset.driveUrl).filter(Boolean),
+            };
+          }
+          let n = e.state.finals[t.id],
+            i = t.images || [],
+            a = !!(
+              i.length &&
+              t.originalVersion === r.version &&
+              n?.version === r.version &&
+              de(
+                n.files,
+                i.map((l) => l.id),
+              ) &&
+              i.every((l) => l.url)
+            ),
+            c = e.state.finalVideos?.[t.id],
+            d =
+              (e.dashboardSummary && t.legacyVideoUrl) ||
+              (c?.version === r.version && de(c.sections, r.sections) ? c.driveUrl : null);
+          return {
+            root: null,
+            family: [],
+            pending: null,
+            unchecked: null,
+            urls: i.map((l) => l.url).filter(Boolean),
+            ready: a,
+            legacyImages: i.length,
+            legacyConfirmed: a,
+            finalVideoUrl: d,
+          };
+        }
+        var Te = (e) => JSON.stringify([...e.urls, e.root?.finalVideoUrl || e.finalVideoUrl || ""]);
+        function W(e, t, r, s) {
+          return e.dashboardSummary && t.publicationUrl
+            ? { url: t.publicationUrl }
+            : (e.state.publications || []).findLast(
+                (o) =>
+                  o.contentId === t.id &&
+                  o.version === r.version &&
+                  de(o.sections, r.sections) &&
+                  o.mediaSignature === Te(s),
+              ) || null;
+        }
+        var pe = (e, t, r, s) =>
+          s.ready &&
+          (t.format !== "Reel" ||
+            !!(s.root
+              ? s.root.finalVideoUrl &&
+                s.root.finalVideoAt &&
+                s.family.every((o) => o.id === s.root.id || o.createdAt <= s.root.finalVideoAt)
+              : s.finalVideoUrl));
+        var lt = (e, t) => JSON.stringify(e) === JSON.stringify(t),
+          Fe = (e, t) =>
+            structuredClone({
+              contentId: e.id,
+              version: t.version,
+              product: e.product,
+              date: e.date,
+              format: e.format,
+              sections: t.sections,
+              slides: t.slides,
+              caption: t.caption,
+            }),
+          Ue = (e, t = 4e3) => typeof e == "string" && e.trim().length > 0 && e.length <= t;
+        function je(e, t) {
+          if (t.withdrawnAt || t.kind !== "script" || !t.responseVersion) return null;
+          let r = e.contents.find((a) => a.id === t.contentId),
+            s = e.state?.approvals?.[t.contentId],
+            o = r?.reviews.find((a) => a.version === s?.version);
+          if (s?.source !== "site" || !o || !lt(s.sections, o.sections)) return null;
+          let n = [t.responseVersion],
+            i = new Set([t.version]);
+          for (let a = 0; a < n.length; a++) {
+            let c = n[a];
+            if (i.has(c)) continue;
+            i.add(c);
+            let d = r.reviews.find((l) => l.version === c);
+            if (d) {
+              if (c === s.version) return c;
+              for (let l of e.revisionRequests || [])
+                l.id !== t.id &&
+                  l.contentId === t.contentId &&
+                  l.kind === "script" &&
+                  !l.withdrawnAt &&
+                  l.version === c &&
+                  l.responseVersion &&
+                  l.snapshot &&
+                  lt(l.snapshot, Fe(r, d)) &&
+                  n.push(l.responseVersion);
+            }
+          }
+          return null;
+        }
+        function j(e, t) {
+          return t.withdrawnAt
+            ? "withdrawn"
+            : t.responseVersion
+              ? je(e, t)
+                ? "approved"
+                : "review"
+              : t.status === "processing" && Date.now() - Date.parse(t.startedAt) > 36e5
+                ? "blocked"
+                : t.status || "received";
+        }
+        function B(e) {
+          e.revisionRequests ||= [];
+          for (let [t, r] of (e.state?.notes || []).entries()) {
+            let s = r.requestId || `REV-${r.id}-${Date.parse(r.at)}-${t + 1}`;
+            if (e.revisionRequests.some((p) => p.id === s)) continue;
+            let o = e.contents.find((p) => p.id === r.id);
+            if (!o) continue;
+            let n = r.version || r.target.split(" · ")[0],
+              i = o.reviews.find((p) => p.version === n),
+              a = r.kind || (/이미지|프롬프트/.test(r.target) ? "image" : "script"),
+              c = {
+                id: s,
+                contentId: o.id,
+                version: n,
+                kind: a,
+                target: r.target,
+                text: r.text,
+                createdAt: r.at,
+                status: i && a === "script" ? "received" : "blocked",
+                issue: i && a === "script" ? "" : "이미지·프롬프트 수정 또는 원문 연결 확인이 필요합니다.",
+                snapshot: i ? Fe(o, i) : null,
+                events: [{ at: r.at, message: "수정 요청 접수" }],
+              },
+              d =
+                o.id === "ISHARD-23-20261012-R01" &&
+                n === "V4-A" &&
+                r.at === "2026-10-15T11:30:56.866Z" &&
+                r.text === "30초 이내의 대본으로 줄여줭",
+              l = (e.reports || []).find((p) => p.id === "REVISION-ISHARD-23-20261012-R01-V4-A-30s-r1");
+            (d &&
+              l &&
+              o.reviews.some((p) => p.version === "V4-A-30s-r1") &&
+              ((c.responseVersion = "V4-A-30s-r1"),
+              (c.changeSummary =
+                "30초 이내 요청에 대한 기존 수정본을 연결했습니다. 실제 낭독 시간은 미측정이며 사용자 승인을 기다립니다."),
+              (c.completedAt = l.at),
+              (c.status = "review"),
+              c.events.push({ at: l.at, message: "기존 수정본 연결 · 승인 대기" })),
+              e.revisionRequests.push(c));
+          }
+          return e;
+        }
+        function fe(e, t) {
+          return (
+            B(e),
+            e.revisionRequests.find(
+              (r) => r.contentId === t && r.kind === "script" && !["approved", "withdrawn"].includes(j(e, r)),
+            )
+          );
+        }
+        function Je(e, t) {
+          B(e);
+          let r = e.revisionRequests.find((s) => s.id === t);
+          if (!r) throw Error("수정 요청을 찾지 못했습니다.");
+          return r;
+        }
+        function ut(e, t, r = new Date().toISOString()) {
+          B(e);
+          let s = e.contents.find((l) => l.id === t.content_id),
+            o = s?.reviews.find((l) => l.version === t.version);
+          if (!o || !Ue(t.text)) throw Error("수정할 원고 버전과 요청 내용을 확인해주세요.");
+          let n = t.kind || "script";
+          if (!["script", "image"].includes(n)) throw Error("잘못된 수정 종류입니다.");
+          let i = e.revisionRequests.find(
+            (l) =>
+              l.contentId === s.id &&
+              l.version === o.version &&
+              l.kind === n &&
+              l.text === t.text.trim() &&
+              !["approved", "withdrawn"].includes(j(e, l)),
+          );
+          if (i) return { request: i, reused: !0 };
+          let a = "REV-" + r.slice(0, 10).replaceAll("-", "") + "-" + crypto.randomUUID().slice(0, 8),
+            c = t.target || o.version + " · 원고";
+          if (!Ue(c, 200)) throw Error("수정 대상을 확인해주세요.");
+          let d = {
+            id: a,
+            contentId: s.id,
+            version: o.version,
+            kind: n,
+            target: c,
+            text: t.text.trim(),
+            snapshot: Fe(s, o),
+            createdAt: r,
+            status: n === "script" ? "received" : "blocked",
+            issue: n === "script" ? "" : "기존 이미지 수정 요청입니다. 대상 이미지와 제작 경로를 확인해야 합니다.",
+            events: [{ at: r, message: "수정 요청 접수" }],
+          };
+          return (
+            e.revisionRequests.push(d),
+            e.state.notes.push({ id: s.id, requestId: a, version: o.version, kind: n, target: c, text: d.text, at: r }),
+            { request: d, reused: !1 }
+          );
+        }
+        function pt(e, t) {
+          let r = Je(e, t);
+          if (["review", "approved"].includes(j(e, r))) return { request: r, reused: !0 };
+          if (j(e, r) !== "received" || r.kind !== "script")
+            throw Error("접수 상태의 원고 요청만 시작할 수 있습니다. 중단된 작업은 결과를 확인해주세요.");
+          return (
+            (r.status = "processing"),
+            (r.claim = crypto.randomUUID()),
+            (r.startedAt = new Date().toISOString()),
+            r.events.push({ at: r.startedAt, message: "원고 수정 시작" }),
+            { request: r, reused: !1 }
+          );
+        }
+        function ft(e, t) {
+          let r = Je(e, t.request_id);
+          if (r.responseVersion) {
+            if (r.responseVersion === t.response_version && r.changeSummary === t.change_summary) return r;
+            throw Error("연결된 수정본은 덮어쓸 수 없습니다.");
+          }
+          if (!r.claim || r.claim !== t.claim || r.withdrawnAt) throw Error("이 요청의 처리 시작 기록을 확인해주세요.");
+          let s = e.contents.find((n) => n.id === r.contentId),
+            o = s?.reviews.find((n) => n.version === t.response_version);
+          if (!o || o.version === r.version || !Ue(t.change_summary))
+            throw Error("별도로 저장한 새 원고 버전과 변경 요약이 필요합니다.");
+          return (
+            (r.responseVersion = o.version),
+            (r.changeSummary = t.change_summary),
+            (r.completedAt = new Date().toISOString()),
+            (r.status = "review"),
+            (r.issue = ""),
+            r.events.push({ at: r.completedAt, message: "수정본 연결 · 사용자 검토 대기" }),
+            r
+          );
+        }
+        function mt(e, t) {
+          let r = Je(e, t);
+          return (
+            (r.withdrawnAt = new Date().toISOString()),
+            r.events.push({ at: r.withdrawnAt, message: "사용자가 요청 철회" }),
+            r
+          );
+        }
+        var cr = (e, t) => JSON.stringify(e) === JSON.stringify(t);
+        function Me(e, t, r) {
+          let s = e.contents.find((c) => c.id === t);
+          if (!s) throw new Error("CONTENT_NOT_FOUND");
+          let o = s.reviews.find((c) => c.version === r);
+          if (!o) throw new Error("DRAFT_NOT_FOUND");
+          if (ct(e.state, t)) throw new Error("APPROVAL_REQUIRED");
+          let n = e.state.approvals[t];
+          if (
+            (n && s.reviews.some((c) => c.version === n.version && cr(c.sections, n.sections))
+              ? n.version
+              : s.reviews.find((c) => c.version === s.originalVersion && c.sourceApproved)?.version) !== r
+          )
+            throw new Error("APPROVAL_REQUIRED");
+          return { content: s, draft: o };
+        }
+        var Le =
+          "ISHARD-FEED-MOOD-20261013: 독립 9:16 사진. 자연광·폰카 일상 스냅, 크림·웜그레이 바탕과 올리브 연결색, 최소 소품. 제품 원본의 색·형태·각인·라벨 보존. 인물 정면 얼굴 최대한 피하기. 비누는 손에서 거품을 내며 얼굴에 직접 문지르지 않기. 사진에 카피·CTA·장번호·임의 로고·워터마크 금지. 콜라주 금지. 승인 문장·순서·캡션 유지. 생성 이미지를 실제 후기·효능 증거로 표시하지 않기. 생성 후 자동 시각 검수·재생성 금지. Google Drive 기존 콘텐츠 경로에 저장하고 사이트 요청에 원본 링크와 미리보기 연결. 실제 영상 생성·SNS 게시·광고 집행 제외.";
+        var me = (e, t) => JSON.stringify(e) === JSON.stringify(t),
+          ee = (e, t = 3e3) => typeof e == "string" && e.trim().length > 0 && e.length <= t;
+        function dr(e) {
+          try {
+            return new URL(e).protocol === "https:";
+          } catch {
+            return !1;
+          }
+        }
+        function G(e, t = !1) {
+          try {
+            let r = new URL(e);
+            return (
+              r.protocol === "https:" &&
+              r.hostname === "drive.google.com" &&
+              (t
+                ? /^\/drive\/folders\/[\w-]+$/.test(r.pathname)
+                : /^\/file\/d\/[\w-]+\/(view|preview)$/.test(r.pathname))
+            );
+          } catch {
+            return !1;
+          }
+        }
+        function vt(e, t) {
+          return structuredClone({
+            contentId: e.id,
+            version: t.version,
+            date: e.date,
+            product: e.product,
+            format: e.format,
+            sections: t.sections,
+            slides: t.slides,
+            caption: t.caption,
+            ...(t.storyboardText ? { storyboardText: t.storyboardText } : {}),
+            ...(t.storyboardScenes ? { storyboardScenes: t.storyboardScenes } : {}),
+          });
+        }
+        function gt(e, t) {
+          try {
+            let { content: r, draft: s } = Me(e, t.snapshot.contentId, t.snapshot.version);
+            return me(vt(r, s), t.snapshot);
+          } catch {
+            return !1;
+          }
+        }
+        function K(e, t) {
+          let r = (e.productionRequests || []).find((s) => s.id === t);
+          if (!r) throw Error("제작 요청을 찾지 못했습니다.");
+          return r;
+        }
+        function Pe(e, t) {
+          return t.cancelledAt
+            ? "cancelled"
+            : gt(e, t)
+              ? t.slots.length && t.slots.every((r) => r.asset)
+                ? "completed"
+                : fe(e, t.snapshot.contentId)
+                  ? "revision_hold"
+                  : t.slots.some((r) => r.asset)
+                    ? "partial"
+                    : t.slots.some((r) => r.state === "generating")
+                      ? "generating"
+                      : t.slots.some((r) => r.state === "uncertain" || r.state === "failed")
+                        ? "blocked"
+                        : "requested"
+              : "changed";
+        }
+        function H(e, t) {
+          if (t.cancelledAt) throw Error("취소된 요청입니다.");
+          if (fe(e, t.snapshot.contentId))
+            throw Error("미해결 원고 수정 요청이 있습니다. 수정본 검토 후 제작해주세요.");
+          if (!gt(e, t)) throw Error("승인 원고가 변경되었습니다. 현재 승인 버전으로 새 요청을 만들어주세요.");
+        }
+        function lr(e, t, r) {
+          return e.format === "Carousel"
+            ? t.slides.map((s, o) => ({
+                id: "slide-" + (o + 1),
+                label: "캐러셀 " + (o + 1) + "장",
+                sourceText: s.text,
+                state: "pending",
+              }))
+            : e.format === "Image"
+              ? [
+                  {
+                    id: "image-1",
+                    label: "단일 이미지",
+                    sourceText: t.sections.map((s) => s.text).join(`
+`),
+                    state: "pending",
+                  },
+                ]
+              : r === "cover"
+                ? [{ id: "cover", label: "릴스 커버", sourceText: t.sections[0]?.text || t.caption, state: "pending" }]
+                : [];
+        }
+        function ve(e, t, r = new Date().toISOString()) {
+          let { content: s, draft: o } = Me(e, t.content_id, t.version);
+          if (fe(e, s.id)) throw Error("미해결 원고 수정 요청이 있습니다. 수정본 검토 후 제작해주세요.");
+          let n = s.format === "Reel" ? t.scope || "cover_scenes" : "all";
+          if (!(s.format === "Reel" ? ["cover", "scenes", "cover_scenes"] : ["all"]).includes(n))
+            throw Error("제작 범위를 확인해주세요.");
+          let i = vt(s, o),
+            a = t.parent_id ? K(e, t.parent_id) : null,
+            c = lr(s, o, n),
+            d = t.note || "";
+          if (typeof d != "string" || d.length > 3e3) throw Error("수정 요청이 너무 깁니다.");
+          if (a) {
+            if ((H(e, a), !me(a.snapshot, i))) throw Error("원본 요청과 승인 버전이 다릅니다.");
+            if (!ee(d)) throw Error("이미지 수정 내용을 입력해주세요.");
+            let D = a.slots.find((F) => F.id === t.slot_id && F.asset);
+            if (!D) throw Error("수정할 완성 이미지를 선택해주세요.");
+            c = [
+              {
+                ...structuredClone(D),
+                asset: void 0,
+                state: "pending",
+                attempt: void 0,
+                startedAt: void 0,
+                issue: void 0,
+              },
+            ];
+          }
+          let l = JSON.stringify({ snapshot: i, scope: n, parent: a?.id || null, slot: t.slot_id || null, note: d });
+          e.productionRequests ||= [];
+          let p = e.productionRequests.find((D) => D.identity === l && !D.cancelledAt);
+          if (p) return { request: p, reused: !0 };
+          if (e.productionRequests.length >= 300) throw Error("요청 보관 한도에 도달했습니다.");
+          let h = new Intl.DateTimeFormat("en-CA", {
+              timeZone: "Asia/Seoul",
+              year: "numeric",
+              month: "2-digit",
+              day: "2-digit",
+            })
+              .format(new Date(r))
+              .replaceAll("-", ""),
+            I = 1,
+            m;
+          do m = "IMG-" + h + "-" + String(I++).padStart(3, "0");
+          while (e.productionRequests.some((D) => D.id === m));
+          let f = {
+            id: m,
+            identity: l,
+            snapshot: i,
+            scope: n,
+            note: d,
+            parentId: a?.id || null,
+            sourceSlotId: t.slot_id || null,
+            createdAt: r,
+            updatedAt: r,
+            visualRules: Le,
+            driveFolder: a?.driveFolder || s.drive || "",
+            referenceScenes: s.originalVersion === o.version ? structuredClone(s.scenes || []) : [],
+            slots: c,
+            events: [{ at: r, message: a ? "이미지 수정 요청 등록" : "제작 요청 등록" }],
+          };
+          return (e.productionRequests.push(f), { request: f, reused: !1 });
+        }
+        function He(e, t, r) {
+          let s = K(e, t);
+          if ((H(e, s), !G(r.drive_folder, !0))) throw Error("확인된 Google Drive 폴더 URL이 필요합니다.");
+          if (!Array.isArray(r.slots) || !r.slots.length || r.slots.length > 30) throw Error("장면표가 필요합니다.");
+          if (new Set(r.slots.map((a) => a.id)).size !== r.slots.length) throw Error("중복된 장면 ID입니다.");
+          if (
+            (s.snapshot.format !== "Reel" || s.parentId || s.scope === "cover") &&
+            (!me(
+              r.slots.map((a) => a.id),
+              s.slots.map((a) => a.id),
+            ) ||
+              r.slots.some((a, c) => a.source_text !== s.slots[c].sourceText))
+          )
+            throw Error("기존 장번호·승인 문장·순서를 유지해주세요.");
+          if (s.snapshot.format === "Reel" && !s.parentId) {
+            let a = r.slots.filter((d) => d.id === "cover").length,
+              c = r.slots.filter((d) => /^scene-[1-9]\d*$/.test(d.id));
+            if (
+              a !== (s.scope === "scenes" ? 0 : 1) ||
+              c.length !== (s.scope === "cover" ? 0 : r.slots.length - a) ||
+              (s.scope !== "cover" && !c.length) ||
+              c.some((d, l) => d.id !== "scene-" + (l + 1))
+            )
+              throw Error("릴스 커버·장면 범위를 확인해주세요.");
+          }
+          let n = [
+              s.snapshot.storyboardText || "",
+              ...s.snapshot.sections.map((a) => a.text),
+              ...s.snapshot.slides.map((a) => a.text),
+              s.snapshot.caption,
+            ].join(`
+`),
+            i = r.slots.map((a) => {
+              if (
+                !/^(cover|scene-[1-9]\d*|slide-[1-9]\d*|image-1)$/.test(a.id) ||
+                !ee(a.label, 100) ||
+                !ee(a.source_text, 3e4) ||
+                !n.includes(a.source_text) ||
+                !ee(a.prompt, 12e3) ||
+                typeof a.requires_product != "boolean" ||
+                !Array.isArray(a.reference_urls) ||
+                a.reference_urls.length > 8 ||
+                !a.reference_urls.every(dr) ||
+                (a.requires_product && !a.reference_urls.length)
+              )
+                throw Error("장면의 승인 문장·프롬프트·제품 참조를 확인해주세요.");
+              return {
+                id: a.id,
+                label: a.label,
+                sourceText: a.source_text,
+                prompt: a.prompt,
+                requiresProduct: a.requires_product,
+                referenceUrls: a.reference_urls,
+                state: "pending",
+              };
+            });
+          if (s.slots.some((a) => a.state !== "pending" || a.asset)) {
+            let a = (c) => ({
+              id: c.id,
+              label: c.label,
+              sourceText: c.sourceText,
+              prompt: c.prompt,
+              requiresProduct: c.requiresProduct,
+              referenceUrls: c.referenceUrls,
+              state: "pending",
+            });
+            if (!me(s.slots.map(a), i) || s.driveFolder !== r.drive_folder)
+              throw Error("제작이 시작된 장면표는 변경할 수 없습니다.");
+            return s;
+          }
+          return (
+            (s.slots = i),
+            (s.driveFolder = r.drive_folder),
+            (s.updatedAt = new Date().toISOString()),
+            s.events.push({ at: s.updatedAt, message: "장면표와 저장 폴더 준비" }),
+            s
+          );
+        }
+        function ht(e, t, r) {
+          let s = K(e, t);
+          H(e, s);
+          let o = s.slots.find((n) => n.id === r);
+          if (!o || !o.prompt || !G(s.driveFolder, !0)) throw Error("장면표와 저장 폴더를 먼저 준비해주세요.");
+          if (o.asset) return { request: s, slot: o, reused: !0 };
+          if (o.state !== "pending") throw Error("이미 시작한 작업입니다. 완료 여부를 확인하기 전 재생성하지 마세요.");
+          return (
+            (o.state = "generating"),
+            (o.attempt = crypto.randomUUID()),
+            (o.startedAt = new Date().toISOString()),
+            (s.updatedAt = o.startedAt),
+            { request: s, slot: o, reused: !1 }
+          );
+        }
+        function bt(e, t, r, s) {
+          let o = K(e, t),
+            n = o.slots.find((a) => a.id === r);
+          if (!n) throw Error("장면을 찾지 못했습니다.");
+          if (!ee(s.fileName, 240) || !G(s.driveUrl) || !ee(s.previewKey, 300))
+            throw Error("결과 파일과 Drive 원본 URL을 확인해주세요.");
+          if (n.asset) {
+            if (
+              n.asset.driveUrl === s.driveUrl &&
+              n.asset.previewKey === s.previewKey &&
+              n.asset.fileName === s.fileName
+            )
+              return { request: o, reused: !0 };
+            throw Error("완성물은 덮어쓸 수 없습니다. 이미지 수정 요청을 사용해주세요.");
+          }
+          if (!n.attempt || !["generating", "uncertain"].includes(n.state)) throw Error("제작 시작 기록이 필요합니다.");
+          ((n.asset = { ...s, savedAt: new Date().toISOString() }), (n.state = "completed"), delete n.issue);
+          let i = P(e.productionRequests, o);
+          return (
+            delete i.root.reviewedAt,
+            delete i.root.finalVideoAt,
+            (o.updatedAt = n.asset.savedAt),
+            o.events.push({ at: o.updatedAt, message: n.label + " 저장 완료" }),
+            { request: o, reused: !1 }
+          );
+        }
+        function yt(e, t, r, s, o, n = new Date().toISOString()) {
+          let i = K(e, t);
+          H(e, i);
+          let a = P(e.productionRequests, i);
+          H(e, a.root);
+          let c = a.slots.find((p) => p.id === r),
+            d = c?.candidates.find((p) => p.request.id === s && p.slot.asset.previewKey === o);
+          if (!d) throw Error("이 장의 완성 이미지 중에서 선택해주세요.");
+          if ((H(e, d.request), c.pending)) throw Error("이 장의 수정 이미지 제작 완료 후 선택해주세요.");
+          let l = a.root.imageSelections?.[r];
+          return (
+            (l?.requestId === s && l.previewKey === o && l.candidateSignature === c.candidateSignature) ||
+              (((a.root.imageSelections ||= {})[r] = {
+                requestId: s,
+                previewKey: o,
+                selectedAt: n,
+                candidateSignature: c.candidateSignature,
+              }),
+              delete a.root.reviewedAt,
+              delete a.root.finalVideoAt,
+              (a.root.updatedAt = n),
+              a.root.events.push({ at: n, message: c.original.label + " · 사용할 이미지 선택 (" + s + ")" })),
+            a.root
+          );
+        }
+        function St(e, t) {
+          let r = K(e, t);
+          H(e, r);
+          let s = P(e.productionRequests, r),
+            o = s.root;
+          if ((H(e, o), s.pending))
+            throw Error("진행 중인 이미지 수정 요청이 있습니다. 모든 이미지가 완성된 뒤 확인해주세요.");
+          if (s.needsSelection || !s.slots.length) throw Error("각 장에서 사용할 이미지를 먼저 선택해주세요.");
+          let n = new Date().toISOString();
+          for (let i of s.family)
+            (H(e, i),
+              i.reviewedAt ||
+                ((i.reviewedAt = n),
+                (i.updatedAt = n),
+                (i.events ||= []).push({ at: n, message: "사용자가 선택한 이미지 묶음 확인 완료" })));
+          return o;
+        }
+        var te = Object.freeze([
+            "SCENE CONTEXT",
+            "ACTIVE REFERENCES",
+            "WARDROBE",
+            "LOCATION MAP",
+            "FIRST FRAME / BLOCKING",
+            "FORMAT MODE",
+            "OPTICS",
+            "CAMERA",
+            "ACTION",
+            "PERFORMANCE",
+            "PHYSICS",
+            "LIGHTING",
+            "STYLE",
+            "POSITIVE LOCKS",
+          ]),
+          ge = Object.freeze(["AUDIO", "END FRAME", "TIMING"]);
+        function Ge(e, t) {
+          if (typeof e != "string" || !e.trim()) return { ok: !1, reason: "Prompt is empty" };
+          if (e.length > 5e3) return { ok: !1, reason: "Prompt exceeds 5,000 characters" };
+          let r = e
+              .replace(
+                /\r\n/g,
+                `
+`,
+              )
+              .trim().split(`
+`),
+            s = [];
+          for (let i = 0; i < r.length; i++) {
+            let a = r[i].match(/^([A-Z][A-Z /]+):(?:\s*(.*))?$/);
+            a && s.push({ name: a[1].trim(), start: i, inline: a[2] || "" });
+          }
+          let o = s.length === te.length + ge.length,
+            n = o ? [...te, ...ge] : te;
+          if ((s.length !== te.length && !o) || s[0]?.start !== 0)
+            return {
+              ok: !1,
+              reason: "All 14 headings (or 17 with AUDIO, END FRAME, TIMING) must appear in order from the first line",
+            };
+          for (let i = 0; i < n.length; i++) {
+            if (s[i].name !== n[i]) return { ok: !1, reason: "Expected section " + n[i] };
+            let a = s[i + 1]?.start ?? r.length,
+              c = [s[i].inline, ...r.slice(s[i].start + 1, a)]
+                .join(
+                  `
+`,
+                )
+                .trim();
+            if (!c) return { ok: !1, reason: "Empty section " + s[i].name };
+            if (
+              s[i].name === "AUDIO" &&
+              (!/ambient|sound effects?|환경음|효과음/i.test(c) ||
+                /\b(voice|music|subtitles?)\b(?!\s*\))/i.test(
+                  c.replace(/\b(no|without|not)\s+(voice|music|subtitles?)\b/gi, ""),
+                ))
+            )
+              return {
+                ok: !1,
+                reason: "AUDIO must allow only ambient sound and sound effects (no voice, music, subtitles)",
+              };
+            if (s[i].name === "TIMING" && t !== void 0) {
+              let d = String(t).match(/^(\d+(?:\.\d+)?)\s*(?:s|초)?\s*[–—~−-]\s*(\d+(?:\.\d+)?)/i),
+                l = Number((c.match(/\d+(?:\.\d+)?/) || [])[0]);
+              if (!d || Math.abs(l - (Number(d[2]) - Number(d[1]))) > 0.01)
+                return { ok: !1, reason: "TIMING must match the scene duration" };
+            }
+            if (s[i].name === "ACTION") {
+              if (!/^0\.0s\b/i.test(c)) return { ok: !1, reason: "ACTION must start at 0.0s" };
+              let d = [...c.matchAll(/\b(\d+(?:\.\d+)?)s\b/gi)].map((l) => Number(l[1]));
+              if (d.length < 2 || d[0] !== 0 || d.some((l, p) => p > 0 && l < d[p - 1]))
+                return {
+                  ok: !1,
+                  reason: "ACTION must include a chronological shot-relative timeline starting at 0.0s",
+                };
+              if (t !== void 0) {
+                let l = String(t).match(/^(\d+(?:\.\d+)?)\s*(?:s|초)?\s*[–—~−-]\s*(\d+(?:\.\d+)?)\s*(?:s|초)?$/i);
+                if (!l || Number(l[2]) <= Number(l[1]) || Math.abs(d.at(-1) - (Number(l[2]) - Number(l[1]))) > 0.01)
+                  return { ok: !1, reason: "ACTION end must match the scene duration" };
+              }
+            }
+          }
+          return { ok: !0, reason: "" };
+        }
+        function re(e, t, r) {
+          let s = e.contents.find((f) => f.id === t),
+            o = s?.reviews.find((f) => f.version === r),
+            n = e.state.approvals?.[t],
+            i =
+              !!o &&
+              !e.state.approvalHolds?.[t] &&
+              (n
+                ? n.version === r && JSON.stringify(n.sections) === JSON.stringify(o.sections)
+                : s.originalVersion === r && o.sourceApproved),
+            a = e.state.storyboards?.[t]?.[r]?.scenes || (s?.originalVersion === r ? s.scenes || [] : []),
+            d = (e.productionRequests || [])
+              .filter(
+                (f) =>
+                  !f.cancelledAt &&
+                  !["cancelled"].includes(f.status) &&
+                  f.snapshot.contentId === t &&
+                  f.snapshot.version === r &&
+                  o &&
+                  JSON.stringify(f.snapshot.sections) === JSON.stringify(o.sections) &&
+                  f.snapshot.caption === o.caption &&
+                  (f.snapshot.storyboardText || "") === (o.storyboardText || "") &&
+                  JSON.stringify(f.snapshot.storyboardScenes || []) === JSON.stringify(o.storyboardScenes || []) &&
+                  JSON.stringify(f.snapshot.slides) === JSON.stringify(o.slides),
+              )
+              .map((f) => (f.status === "changed" ? { ...f, status: "historical" } : f)),
+            l = d.find((f) => !f.parentId),
+            p = l ? P(d, l) : null,
+            h = (e.revisionRequests || []).some(
+              (f) => f.contentId === t && f.kind === "script" && !["approved", "withdrawn"].includes(f.status),
+            ),
+            I = a.map((f, D) => {
+              let F = "scene-" + (D + 1),
+                Y = p?.slots.find((sr) => sr.id === F),
+                ae = Y?.selected,
+                g = ae?.slot.asset,
+                S = g
+                  ? {
+                      request_id: ae.request.id,
+                      slot_id: F,
+                      image_version: g.previewKey,
+                      original_url: g.driveUrl,
+                      preview_url:
+                        "/api/production/preview?request=" +
+                        encodeURIComponent(ae.request.id) +
+                        "&slot=" +
+                        F +
+                        "&v=" +
+                        encodeURIComponent(g.previewKey.split("/").pop()),
+                    }
+                  : null,
+                T = JSON.stringify([
+                  f.timing,
+                  f.visual,
+                  f.subtitle,
+                  f.reference,
+                  ...(f.motion ? [f.motion] : []),
+                  ...(o?.storyboardText ? [o.storyboardText] : []),
+                ]),
+                nt = e.state.higgsfieldPrompts?.[t]?.[r]?.[F] || [],
+                Z = nt.at(-1),
+                rr =
+                  !!S &&
+                  Z?.image_version === S.image_version &&
+                  Z?.request_id === S.request_id &&
+                  Z?.original_url === S.original_url &&
+                  Z?.scene_signature === T &&
+                  !Y?.pending;
+              return {
+                scene_id: F,
+                scene: f,
+                slot: Y,
+                image: S,
+                scene_signature: T,
+                confirmed: !!(i && !h && S && !Y?.pending && p.root.reviewedAt),
+                prompt: Z || null,
+                prompt_status: Z ? (rr ? "current" : "stale") : f.prompt ? "legacy" : "missing",
+                history: nt,
+              };
+            }),
+            m = !!(i && !h && I.length && I.every((f) => f.confirmed));
+          return {
+            approved: i,
+            held: h,
+            root_id: p?.root.id || null,
+            group: p,
+            scenes: I,
+            ready: m,
+            missing: I.filter((f) => !f.confirmed).map((f) => f.scene_id),
+          };
+        }
+        var Ls = re.toString();
+        function wt(e, t, r = new Date().toISOString()) {
+          let s = re(e, t.content_id, t.version);
+          if (!s.ready) throw Error("장면 이미지 전체 선택·확정 필요: " + s.missing.join(", "));
+          let o = s.scenes.find((d) => d.scene_id === t.scene_id);
+          if (!o || !o.image) throw Error("장면을 찾지 못했습니다.");
+          for (let d of ["request_id", "image_version", "original_url"])
+            if (t[d] !== o.image[d]) throw Error("이미지가 변경되었습니다. 확정 이미지를 다시 읽어주세요.");
+          let n = Ge(t.prompt, o.scene.timing);
+          if (!n.ok) throw Error(n.reason);
+          if (!(t.prompt.split("ACTIVE REFERENCES:")[1]?.split("WARDROBE:")[0] || "").includes(o.image.original_url))
+            throw Error("ACTIVE REFERENCES에 확정 이미지 원본 URL이 필요합니다.");
+          let a = { ...o.image, scene_signature: o.scene_signature, prompt: t.prompt, savedAt: r };
+          ((e.state.higgsfieldPrompts ||= {}),
+            (e.state.higgsfieldPrompts[t.content_id] ||= {}),
+            (e.state.higgsfieldPrompts[t.content_id][t.version] ||= {}));
+          let c = (e.state.higgsfieldPrompts[t.content_id][t.version][t.scene_id] ||= []);
+          return JSON.stringify(c.at(-1)) === JSON.stringify(a) ||
+            (c.at(-1)?.prompt === a.prompt && o.prompt_status === "current")
+            ? { reused: !0, scene_id: t.scene_id }
+            : (c.push(a),
+              e.state.events.push({
+                at: r,
+                message: t.content_id + " · " + t.version + " · " + t.scene_id + " 확정 이미지 기반 Higgsfield 저장",
+              }),
+              { scene_id: t.scene_id, image_version: a.image_version, reused: !1 });
+        }
+        function le(e, t, r = new Date().toISOString()) {
+          let s = t.id,
+            o = {
+              key: crypto.randomUUID(),
+              at: r,
+              content: structuredClone(t),
+              approval: e.state.approvals[s] || null,
+              approvalHold: e.state.approvalHolds?.[s] || null,
+              storyboard: e.state.storyboards?.[s] || null,
+              final: e.state.finals[s] || null,
+              finalVideo: e.state.finalVideos?.[s] || null,
+              publications: (e.state.publications || []).filter((n) => n.contentId === s),
+              notes: e.state.notes.filter((n) => n.id === s),
+              revisionRequests: (e.revisionRequests || []).filter((n) => n.contentId === s),
+            };
+          return (
+            (e.trash ||= []).push(o),
+            delete e.state.approvals[s],
+            e.state.approvalHolds && delete e.state.approvalHolds[s],
+            delete e.state.finals[s],
+            e.state.storyboards && delete e.state.storyboards[s],
+            e.state.finalVideos && delete e.state.finalVideos[s],
+            e.state.publications && (e.state.publications = e.state.publications.filter((n) => n.contentId !== s)),
+            (e.state.notes = e.state.notes.filter((n) => n.id !== s)),
+            (e.revisionRequests = (e.revisionRequests || []).filter((n) => n.contentId !== s)),
+            o
+          );
+        }
+        function he(e, t, r = new Date().toISOString()) {
+          let s = (e.trash || []).findIndex((a) => a.key === t);
+          if (s < 0) throw Error("복원할 콘텐츠를 찾지 못했습니다.");
+          let o = e.trash.splice(s, 1)[0],
+            n = o.content.id,
+            i = e.contents.findIndex((a) => a.id === n);
+          return (
+            i >= 0 ? (le(e, e.contents[i], r), (e.contents[i] = o.content)) : e.contents.push(o.content),
+            delete e.state.approvals[n],
+            e.state.approvalHolds && delete e.state.approvalHolds[n],
+            delete e.state.finals[n],
+            o.approval && (e.state.approvals[n] = o.approval),
+            o.approvalHold && ((e.state.approvalHolds ||= {})[n] = o.approvalHold),
+            o.final && (e.state.finals[n] = o.final),
+            o.storyboard && ((e.state.storyboards ||= {})[n] = o.storyboard),
+            o.finalVideo && ((e.state.finalVideos ||= {})[n] = o.finalVideo),
+            o.publications?.length && (e.state.publications ||= []).push(...o.publications),
+            (e.state.notes = [...e.state.notes.filter((a) => a.id !== n), ...(o.notes || [])]),
+            (e.revisionRequests = [
+              ...(e.revisionRequests || []).filter((a) => a.contentId !== n),
+              ...(o.revisionRequests || []),
+            ]),
+            e.state.events.push({ at: r, message: o.content.product + " · 휴지통에서 복원" }),
+            o.content
+          );
+        }
+        function ur(e, t = {}) {
+          let r = t.ids,
+            s = t.start_date,
+            o = t.end_date;
+          if (
+            r !== void 0 &&
+            (!Array.isArray(r) ||
+              !r.length ||
+              r.length > 100 ||
+              r.some((c) => typeof c != "string" || !c.trim()) ||
+              new Set(r).size !== r.length)
+          )
+            throw Error("1~100개의 중복 없는 콘텐츠 ID를 선택해주세요.");
+          let n = s !== void 0 || o !== void 0;
+          if (n && (!/^\d{4}-\d{2}-\d{2}$/.test(s || "") || !/^\d{4}-\d{2}-\d{2}$/.test(o || "") || s > o))
+            throw Error("시작일과 종료일을 정확히 지정해주세요.");
+          if (!r && !n) throw Error("콘텐츠 ID 또는 시작일·종료일을 지정해주세요.");
+          if (r && n) throw Error("콘텐츠 ID 선택과 날짜 범위를 동시에 사용하지 마세요.");
+          let i = r
+            ? r.map((c) => e.contents.find((d) => d.id === c)).filter(Boolean)
+            : e.contents.filter((c) => c.date >= s && c.date <= o);
+          if (i.length > 100) throw Error("한 번에 최대 100건만 이동할 수 있습니다.");
+          let a = r ? r.filter((c) => !e.contents.some((d) => d.id === c)) : [];
+          return { selected: i, missing: a };
+        }
+        function pr(e, t) {
+          let r = t.id,
+            s = [];
+          return (
+            (e.state?.approvals?.[r] ||
+              e.state?.approvalHolds?.[r] ||
+              t.sourceApproval === "승인" ||
+              (t.reviews || []).some((o) => o.sourceApproved) ||
+              (e.state?.approvalHistory || []).some((o) => o.contentId === r)) &&
+              s.push("원고 승인/확정 기록"),
+            (e.state?.finals?.[r] ||
+              e.state?.finalVideos?.[r] ||
+              e.state?.storyboards?.[r] ||
+              (t.images || []).length ||
+              (t.scenes || []).length ||
+              t.drive) &&
+              s.push("이미지·스토리보드·Drive 또는 제작물"),
+            (e.state?.publications || []).some((o) => o.contentId === r) && s.push("SNS 게시 기록"),
+            (e.productionRequests || []).some(
+              (o) => o.snapshot?.contentId === r || o.identity?.snapshot?.contentId === r,
+            ) && s.push("제작 요청"),
+            (e.revisionRequests || []).some(
+              (o) => o.contentId === r && !["approved", "withdrawn"].includes(o.status),
+            ) && s.push("진행 중인 수정 요청"),
+            s
+          );
+        }
+        function Be(e, t) {
+          let { selected: r, missing: s } = ur(e, t),
+            o = [],
+            n = [];
+          for (let a of r) {
+            let c = { id: a.id, date: a.date, product: a.product, format: a.format, topic: a.topic },
+              d = pr(e, a);
+            d.length ? n.push({ ...c, reasons: d }) : o.push(c);
+          }
+          let i = new Set((e.trash || []).map((a) => a.content?.id));
+          return {
+            eligible: o,
+            protected: n,
+            missing: s,
+            already_archived: s.filter((a) => i.has(a)),
+            selected_count: r.length,
+            eligible_count: o.length,
+            protected_count: n.length,
+            preserved: "원고·기획·메모는 휴지통에 보관하고 실제 이미지 원본/R2/Drive 파일은 삭제하지 않습니다.",
+          };
+        }
+        function It(e, t, { confirm: r, strict: s = !0, now: o = new Date().toISOString() } = {}) {
+          if (r !== "휴지통으로 이동") throw Error("일괄 이동 확인 문구가 필요합니다.");
+          let n = Be(e, t);
+          if (n.missing.length) throw Error("선택한 콘텐츠가 변경되었습니다. 목록을 새로 확인해주세요.");
+          if (s && n.protected_count)
+            throw Error("승인·제작·게시·수정 중인 콘텐츠가 포함되어 있습니다. 보호 항목을 제외하고 다시 선택해주세요.");
+          if (!n.eligible_count) throw Error("휴지통으로 이동할 수 있는 미승인 기획이 없습니다.");
+          let i = "BULK-" + crypto.randomUUID(),
+            a = [];
+          for (let c of n.eligible) {
+            let d = e.contents.findIndex((h) => h.id === c.id),
+              l = e.contents[d],
+              p = le(e, l, o);
+            ((p.batchId = i),
+              (p.reason = "일괄 휴지통 보관"),
+              e.contents.splice(d, 1),
+              a.push({ id: c.id, key: p.key }));
+          }
+          return (
+            e.state.events.push({ at: o, message: `기획 ${a.length}건 일괄 휴지통 이동 · 배치 ${i}` }),
+            {
+              batch_id: i,
+              archived: a,
+              skipped: n.protected,
+              archived_count: a.length,
+              protected_count: n.protected_count,
+            }
+          );
+        }
+        function Et(e, t, { confirm: r, now: s = new Date().toISOString() } = {}) {
+          if (r !== "선택 항목 복원") throw Error("복원 확인 문구가 필요합니다.");
+          if (
+            !Array.isArray(t) ||
+            !t.length ||
+            t.length > 100 ||
+            new Set(t).size !== t.length ||
+            t.some((i) => typeof i != "string" || !i)
+          )
+            throw Error("복원할 휴지통 항목 1~100개를 선택해주세요.");
+          let o = t.map((i) => (e.trash || []).find((a) => a.key === i));
+          if (o.some((i) => !i)) throw Error("휴지통 항목이 변경되었습니다. 목록을 새로 확인해주세요.");
+          if (o.some((i) => e.contents.some((a) => a.id === i.content.id)))
+            throw Error("동일 콘텐츠 ID가 활성 목록에 있어 복원할 수 없습니다.");
+          let n = [];
+          for (let i of t) {
+            let a = he(e, i, s);
+            n.push(a.id);
+          }
+          return (
+            e.contents.sort((i, a) => i.date.localeCompare(a.date) || i.id.localeCompare(a.id)),
+            { restored: n, count: n.length }
+          );
+        }
+        function $t(e, t, r, s = new Date().toISOString()) {
+          let o = K(e, t),
+            n = e.contents.find((c) => c.id === o.snapshot.contentId),
+            i = n && R(e, n);
+          if (!i || i.version !== o.snapshot.version || o.parentId || Pe(e, o) !== "completed" || !o.reviewedAt)
+            throw Error("현재 승인 원고의 확인된 이미지 묶음을 먼저 확인해주세요.");
+          if (n.format !== "Reel" || !G(r)) throw Error("최종 영상의 Google Drive 원본 링크를 입력해주세요.");
+          let a = q(e, n, i);
+          if (a.pending || a.unchecked) throw Error("진행 중인 이미지 수정본을 먼저 확인해주세요.");
+          return o.finalVideoUrl === r &&
+            o.finalVideoAt &&
+            a.family.every((c) => c.id === o.id || c.createdAt <= o.finalVideoAt)
+            ? { request: o, reused: !0 }
+            : ((o.finalVideoUrl = r),
+              (o.finalVideoAt = s),
+              (o.updatedAt = s),
+              o.events.push({ at: s, message: "사용자가 최종 영상 원본 링크 연결" }),
+              { request: o, reused: !1 });
+        }
+        function At(e, t, r, s = new Date().toISOString()) {
+          let o = e.contents.find((d) => d.id === t),
+            n = o && R(e, o);
+          if (!n || o.format !== "Reel" || !G(r))
+            throw Error("승인된 릴스와 최종 영상의 Google Drive 원본 링크를 확인해주세요.");
+          let i = q(e, o, n);
+          if (i.root || !i.legacyConfirmed) throw Error("기존 이미지 묶음의 확인 기록을 먼저 확인해주세요.");
+          let a = e.state.finalVideos?.[t];
+          if (a?.version === n.version && a.driveUrl === r && JSON.stringify(a.sections) === JSON.stringify(n.sections))
+            return { video: a, reused: !0 };
+          let c = { version: n.version, sections: structuredClone(n.sections), driveUrl: r, at: s };
+          return (
+            ((e.state.finalVideos ||= {})[t] = c),
+            e.state.events.push({ at: s, message: o.product + " · 사용자가 최종 영상 원본 링크 연결" }),
+            { video: c, reused: !1 }
+          );
+        }
+        function Rt(e, t, r, s = new Date().toISOString()) {
+          let o = e.contents.find((l) => l.id === t),
+            n = o && R(e, o);
+          if (!n) throw Error("승인된 원고가 없습니다.");
+          let i = q(e, o, n);
+          if (!pe(e, o, n, i)) throw Error("최종 이미지 확인과 영상 원본 연결을 먼저 마쳐주세요.");
+          let a;
+          try {
+            a = new URL(r);
+          } catch {}
+          if (
+            !a ||
+            a.protocol !== "https:" ||
+            ![
+              "instagram.com",
+              "www.instagram.com",
+              "tiktok.com",
+              "www.tiktok.com",
+              "youtube.com",
+              "www.youtube.com",
+              "youtu.be",
+            ].includes(a.hostname) ||
+            a.pathname === "/" ||
+            a.pathname.length < 3 ||
+            r.length > 600
+          )
+            throw Error("실제 SNS 게시물의 링크를 입력해주세요.");
+          let c = W(e, o, n, i);
+          if (c?.url === a.href) return { publication: c, reused: !0 };
+          let d = {
+            contentId: t,
+            version: n.version,
+            sections: structuredClone(n.sections),
+            mediaSignature: Te(i),
+            url: a.href,
+            at: s,
+            source: "user",
+          };
+          return (
+            (e.state.publications ||= []).push(d),
+            e.state.events.push({ at: s, message: o.product + " · SNS 게시물 링크 직접 등록" }),
+            { publication: d, reused: !1 }
+          );
+        }
+        function _t(e) {
+          return (
+            e !== null &&
+            typeof e == "object" &&
+            !Array.isArray(e) &&
+            Object.keys(e).every((t) => ["Reel", "Carousel", "Image"].includes(t)) &&
+            ["Reel", "Carousel", "Image"].every(
+              (t) => typeof e[t] == "string" && e[t].trim().length > 0 && e[t].length <= 12e3,
+            )
+          );
+        }
+        function xt(e, t) {
+          let r = (n) => n !== null && typeof n == "object" && !Array.isArray(n),
+            s = (n) => typeof n == "string",
+            o = (n) => s(n) && Number.isFinite(Date.parse(n));
+          if (
+            !r(e) ||
+            !r(e.approvals) ||
+            !r(e.finals) ||
+            !Array.isArray(e.notes) ||
+            !Array.isArray(e.events) ||
+            (e.writingPrompts !== void 0 && !_t(e.writingPrompts))
+          )
+            return !1;
+          if (e.approvalHolds !== void 0) {
+            if (!r(e.approvalHolds)) return !1;
+            for (let [n, i] of Object.entries(e.approvalHolds)) {
+              let a = t.find((c) => c.id === n);
+              if (
+                !a ||
+                !r(i) ||
+                !s(i.version) ||
+                !a.reviews.some((c) => c.version === i.version) ||
+                !o(i.at) ||
+                e.approvals[n]
+              )
+                return !1;
+            }
+          }
+          for (let [n, i] of Object.entries(e.approvals)) {
+            let a = t.find((c) => c.id === n);
+            if (
+              !a ||
+              !r(i) ||
+              !o(i.at) ||
+              i.source !== "site" ||
+              !a.reviews.some(
+                (c) => c.version === i.version && JSON.stringify(c.sections) === JSON.stringify(i.sections),
+              )
+            )
+              return !1;
+          }
+          for (let [n, i] of Object.entries(e.finals)) {
+            let a = t.find((c) => c.id === n);
+            if (
+              !a ||
+              !r(i) ||
+              !o(i.at) ||
+              i.version !== a.originalVersion ||
+              JSON.stringify(i.files) !== JSON.stringify(a.images.map((c) => c.id))
+            )
+              return !1;
+          }
+          if (
+            !e.notes.every(
+              (n) => r(n) && t.some((i) => i.id === n.id) && s(n.target) && s(n.text) && n.text.trim() && o(n.at),
+            ) ||
+            (e.publications !== void 0 &&
+              (!Array.isArray(e.publications) ||
+                !e.publications.every(
+                  (n) =>
+                    r(n) &&
+                    s(n.contentId) &&
+                    s(n.version) &&
+                    Array.isArray(n.sections) &&
+                    s(n.mediaSignature) &&
+                    s(n.url) &&
+                    o(n.at) &&
+                    n.source === "user",
+                ))) ||
+            (e.finalVideos !== void 0 &&
+              (!r(e.finalVideos) ||
+                !Object.values(e.finalVideos).every(
+                  (n) => r(n) && s(n.version) && Array.isArray(n.sections) && s(n.driveUrl) && o(n.at),
+                )))
+          )
+            return !1;
+          if (e.storyboards !== void 0) {
+            if (!r(e.storyboards)) return !1;
+            for (let [n, i] of Object.entries(e.storyboards)) {
+              let a = t.find((c) => c.id === n);
+              if (!a || !r(i)) return !1;
+              for (let [c, d] of Object.entries(i))
+                if (
+                  !a.reviews.some((l) => l.version === c) ||
+                  !r(d) ||
+                  !o(d.updatedAt) ||
+                  !Array.isArray(d.scenes) ||
+                  d.scenes.length < 1 ||
+                  d.scenes.length > 20 ||
+                  !d.scenes.every(
+                    (l) =>
+                      r(l) &&
+                      s(l.timing) &&
+                      l.timing.length <= 60 &&
+                      s(l.visual) &&
+                      l.visual.length <= 2e3 &&
+                      s(l.subtitle) &&
+                      l.subtitle.length <= 2e3 &&
+                      s(l.prompt) &&
+                      l.prompt.length <= 5e3 &&
+                      s(l.reference) &&
+                      l.reference.length <= 1e3 &&
+                      (l.motion === void 0 || (s(l.motion) && l.motion.length <= 2e3)),
+                  )
+                )
+                  return !1;
+            }
+          }
+          return e.events.every((n) => r(n) && o(n.at) && s(n.message));
+        }
+        var Ke = (e) => ({
+            contents: e,
+            state: { approvals: {}, notes: [], finals: {}, events: [] },
+            productionRequests: [],
+            revisionRequests: [],
+            reports: [],
+            trash: [],
+          }),
+          N = (e, t) =>
+            e.contents.find((r) => r.id === t) ||
+            (() => {
+              throw Error("콘텐츠를 찾지 못했습니다.");
+            })();
+        function y(e, t) {
+          let r = structuredClone(e),
+            s = t(r);
+          if (!xt(r.state, r.contents)) throw Error("저장 상태 검증 실패(validState)");
+          return { w: r, result: s };
+        }
+        function fr(e, t, r) {
+          let s;
+          try {
+            s = JSON.parse(r);
+          } catch (n) {
+            throw Error("JSON 형식 오류: " + n.message);
+          }
+          if (s.content_id !== t) throw Error("content_id 불일치");
+          let o = structuredClone(s.strategyV2 || {});
+          return (
+            (o.quality = { ...(o.quality || {}), humanConfirmed: !1 }),
+            y(e, (n) => ke(n, { content_id: t, strategy: o }))
+          );
+        }
+        function mr(e, t, r) {
+          return y(e, (s) => {
+            let o = N(s, t),
+              n = structuredClone(o.plan.strategyV2);
+            return (r(n, o), ke(s, { content_id: t, strategy: n }));
+          });
+        }
+        var vr = (e, t, r) =>
+            y(e, (s) => {
+              let o = N(s, t);
+              (o.plan.productFacts ||= []).push(r);
+            }),
+          be = (e) =>
+            e.plan?.strategyV2 ? Oe(e.plan.strategyV2, e.plan.productFacts) : { ready: !0, legacy: !0, reasons: [] };
+        function gr(e) {
+          if (typeof e != "string" || !e.trim()) return "";
+          let t = e.replace(/\.json$/i, "").trim(),
+            r = t.match(/(?:^|[_\-\s.])([ABC])(?:안)?$/i);
+          return r ? r[1].toUpperCase() + "안" : t.slice(0, 30);
+        }
+        var Ot = (e, t, r, s) => {
+          let o = N(e, t).reviews.find((n) => n.version === r);
+          o && s && (o.label = s);
+        };
+        function kt(e) {
+          if (typeof e != "string") return { rest: e, comments: null };
+          let t = e.trim(),
+            r = /^```(?:json)?\s*\n([\s\S]*?)\n```\s*$/i.exec(
+              t.replace(
+                /\r\n/g,
+                `
+`,
+              ),
+            );
+          r && (t = r[1]);
+          let s;
+          try {
+            s = JSON.parse(t);
+          } catch {
+            return { rest: e, comments: null };
+          }
+          if (!s || typeof s != "object" || Array.isArray(s) || !("comments" in s)) return { rest: e, comments: null };
+          let o = s.comments;
+          delete s.comments;
+          let n = Array.isArray(o)
+            ? o.map((i) => (typeof i == "string" ? i : i && typeof i.text == "string" ? i.text : null))
+            : null;
+          if (!n || n.length > 10 || n.some((i) => typeof i != "string" || !i.trim() || i.length > 300))
+            throw Error("comments: 예상 댓글은 1~300자 문자열 목록(최대 10개)이어야 합니다.");
+          return { rest: JSON.stringify(s), comments: n.map((i) => i.trim()) };
+        }
+        var hr = (e, t, r, s = "") =>
+            y(e, (o) => {
+              let { rest: n, comments: i } = kt(r),
+                a = Ce(n, t),
+                c = Ve(o, {
+                  content_id: t,
+                  script: a.script,
+                  caption: a.caption,
+                  ...(a.storyboard ? { storyboard_scenes: a.storyboard } : {}),
+                });
+              return (
+                Ot(o, t, c.version, gr(s)),
+                i?.length && (N(o, t).reviews.find((d) => d.version === c.version).expectedComments = i),
+                c
+              );
+            }),
+          Ye = (e, t) => {
+            let r = e.reviews.find((s) => s.version === t);
+            return {
+              content_id: e.id,
+              script: r.sections.map((s) => s.text).join(`
+`),
+              caption: r.caption || "",
+              ...(r.expectedComments?.length ? { comments: r.expectedComments } : {}),
+            };
+          },
+          z = (e, t) => {
+            let r = e.reviews.find((s) => s.version === t);
+            return r?.label ? r.label : t;
+          };
+        function br(e, t, r) {
+          return y(e, (s) => {
+            let o = N(s, t),
+              n = be(o);
+            if (!n.ready) throw Error("기획 게이트 미통과: " + n.reasons.join(" / "));
+            let i = o.reviews.find((d) => d.version === r);
+            if (!i) throw Error("원고 버전을 찾지 못했습니다.");
+            qe(s.state, t);
+            let a = s.state.approvals[t];
+            a && (s.state.approvalHistory ||= []).push({ contentId: t, ...structuredClone(a) });
+            let c = new Date().toISOString();
+            ((s.state.approvals[t] = { version: r, sections: structuredClone(i.sections), at: c, source: "site" }),
+              s.state.events.push({ at: c, message: o.product + " · " + r + " 원고 확정" }),
+              B(s));
+            for (let d of s.revisionRequests)
+              d.contentId !== t ||
+                d.kind !== "script" ||
+                ["approved", "withdrawn"].includes(j(s, d)) ||
+                je(s, d) ||
+                ((d.status = "withdrawn"),
+                (d.withdrawnAt = c),
+                (d.events ||= []).push({
+                  at: c,
+                  message: "사용자가 " + r + "를 확정하여 이전 수정 요청 종료 (원문·수정본 보존)",
+                }));
+            Nt(s);
+          });
+        }
+        function Nt(e) {
+          for (let t of e.revisionRequests || []) {
+            let r = j(e, t);
+            (r === "approved" || r === "withdrawn") && t.status !== r && (t.status = r);
+          }
+        }
+        var yr = (e, t, r) => y(e, (s) => dt(s, { content_id: t, version: r })),
+          ye = [
+            "purpose",
+            "action",
+            "camera_angle",
+            "shot_size",
+            "composition",
+            "product_position",
+            "start_frame",
+            "end_frame",
+            "image_criteria",
+          ],
+          Ct = {
+            purpose: "목적",
+            action: "행동",
+            camera_angle: "앵글",
+            shot_size: "샷 크기",
+            composition: "구도·움직임",
+            product_position: "제품 위치",
+            start_frame: "시작 프레임",
+            end_frame: "종료 프레임",
+            image_criteria: "이미지 기준",
+          };
+        function Sr(e, t) {
+          if (!e || typeof e != "object") return null;
+          let r = {};
+          for (let s of ye)
+            if (e[s] !== void 0) {
+              if (typeof e[s] != "string" || !e[s].trim() || e[s].length > 600)
+                throw Error(`storyboard[${t}].${s}: 1~600자 문자열이 필요합니다.`);
+              r[s] = e[s].trim();
+            }
+          return Object.keys(r).length ? r : null;
+        }
+        function Dt(e) {
+          let t = e?.scenes || [],
+            r = t.map((n) => n.shot?.camera_angle).filter(Boolean),
+            s = [];
+          t.length >= 3 &&
+            r.length === t.length &&
+            new Set(r).size === 1 &&
+            s.push(
+              "모든 컷의 카메라 앵글이 같습니다(" +
+                r[0] +
+                "). 정면·45도·POV·탑뷰·오버숄더·클로즈업 등을 섞는 것을 권장합니다.",
+            );
+          let o = t.filter((n) => !n.shot).length;
+          return (o && o < t.length && s.push(o + "개 컷에 구도 정보가 없습니다."), s);
+        }
+        function wr(e, t, r) {
+          let s;
+          try {
+            s = JSON.parse(r);
+          } catch (o) {
+            throw Error("JSON 형식 오류: " + o.message);
+          }
+          return y(e, (o) => {
+            let n = N(o, t),
+              i = R(o, n);
+            if (!i) throw Error("확정된 원고가 없습니다.");
+            if (s.content_id !== t || s.script_version !== i.version)
+              throw Error("content_id/script_version이 확정 원고(" + i.version + ")와 다릅니다.");
+            if (!Array.isArray(s.storyboard)) throw Error("storyboard: 장면 배열이 필요합니다.");
+            let a = s.storyboard.map((p, h) => Sr(p, h)),
+              c = s.storyboard.map((p) => Object.fromEntries(Object.entries(p || {}).filter(([h]) => !ye.includes(h)))),
+              d = ce(c),
+              l = De(d).map((p, h) => (a[h] ? { ...p, shot: a[h] } : p));
+            ((o.state.storyboards ||= {})[t] ||= {})[i.version] = {
+              scenes: l,
+              updatedAt: new Date().toISOString(),
+              source: "storyboard-json",
+            };
+          });
+        }
+        var Se = (e, t, r) =>
+            e.state.storyboards?.[t.id]?.[r.version] ||
+            (t.originalVersion === r.version && (t.scenes || []).length ? { scenes: t.scenes, legacy: !0 } : null),
+          qt = (e, t, r) => !r.root && !!r.legacyImages && e.originalVersion === t.version;
+        function Ir(e, t, r) {
+          return y(e, (s) => {
+            let o = N(s, t),
+              n = R(s, o);
+            if (!n) throw Error("확정된 원고가 없습니다.");
+            if (o.format === "Reel") {
+              let a = s.state.storyboards?.[t]?.[n.version];
+              if (!a) throw Error("스토리보드를 먼저 저장해주세요.");
+              let c = ve(s, { content_id: t, version: n.version, scope: "scenes" }).request,
+                d = n.sections.map((l) => l.text).join(`
+`);
+              return (
+                He(s, c.id, {
+                  drive_folder: r,
+                  slots: a.scenes.map((l, p) => ({
+                    id: "scene-" + (p + 1),
+                    label: "장면 " + (p + 1),
+                    source_text: d,
+                    prompt: l.visual,
+                    requires_product: !1,
+                    reference_urls: [],
+                  })),
+                }),
+                c.id
+              );
+            }
+            let i = ve(s, { content_id: t, version: n.version }).request;
+            if (!i.slots.length)
+              throw Error(
+                o.format === "Carousel"
+                  ? "캐러셀 원고에 장 구분(빈 줄)이 없습니다. 원고를 장별로 나눠 다시 가져와주세요."
+                  : "이미지 원고가 비어 있습니다.",
+              );
+            return (
+              He(s, i.id, {
+                drive_folder: r,
+                slots: i.slots.map((a) => ({
+                  id: a.id,
+                  label: a.label,
+                  source_text: a.sourceText,
+                  prompt:
+                    Le.slice(0, 400) +
+                    `
+장 내용: ` +
+                    a.sourceText.slice(0, 2e3),
+                  requires_product: !1,
+                  reference_urls: [],
+                })),
+              }),
+              i.id
+            );
+          });
+        }
+        function Er(e, t) {
+          return y(e, (r) => {
+            let s = N(r, t),
+              o = R(r, s);
+            if (!o || o.version !== s.originalVersion) throw Error("현재 확정 원고에 해당하는 기존 이미지가 없습니다.");
+            if (!(s.images || []).length || s.images.some((i) => !i.url))
+              throw Error("Drive 원본이 모두 연결된 이미지에서 확인해주세요.");
+            let n = new Date().toISOString();
+            ((r.state.finals[t] = { version: s.originalVersion, files: s.images.map((i) => i.id), at: n }),
+              r.state.events.push({ at: n, message: s.product + " · " + s.originalVersion + " 이미지 묶음 확인" }));
+          });
+        }
+        var $r = (e, t, r) => y(e, (s) => At(s, t, r));
+        function Vt(e, t) {
+          let r = (d, l, p = "", h = "action") => ({ k: d, l, why: p, lane: h }),
+            s = be(t);
+          if (!s.ready) return r("plan", "기획 검수", s.reasons[0], t.plan?.strategyV2 ? "action" : "waiting");
+          let o = R(e, t);
+          if (!o)
+            return t.reviews.length
+              ? r("script", "원고 확정")
+              : r("script", "원고 작성 대기", "원고 JSON 가져오기 필요", "waiting");
+          let n = (e.revisionRequests || []).find(
+            (d) => d.contentId === t.id && d.kind === "script" && !["approved", "withdrawn"].includes(j(e, d)),
+          );
+          if (n)
+            return j(e, n) === "review"
+              ? r("script", "수정본 검토", "수정본을 비교한 뒤 확정하거나 철회하세요")
+              : r("script", "수정본 대기", "작가 수정본을 기다리는 중 · 요청: " + n.text.slice(0, 40), "waiting");
+          let i = t.format === "Reel",
+            a = q(e, t, o),
+            c = qt(t, o, a);
+          if (i && !c && !a.root && !Se(e, t, o))
+            return r("storyboard", "스토리보드 작성 대기", "확정 원고 기준 스토리보드 JSON 필요", "waiting");
+          if (a.root) {
+            if (a.pending) return r("images", "이미지 제작 대기", "제작 또는 수정본 대기", "waiting");
+            if (a.needsSelection) return r("images", "이미지 선택", "컷마다 사용할 이미지를 골라주세요");
+            if (!a.ready) return r("images", "이미지 전체 확정");
+          } else if (c) {
+            if (!a.legacyConfirmed)
+              return r("images", "기존 이미지 확인", "기존 이미지 " + a.legacyImages + "장을 확인해주세요");
+          } else return r("images", "이미지 제작 요청");
+          if (i) {
+            if (a.root) {
+              if (!re(e, t.id, o.version).scenes.every((l) => l.prompt_status === "current"))
+                return r("video", "Higgsfield 프롬프트", "컷별 프롬프트 검증·저장 필요");
+              if (!a.root.finalVideoUrl) return r("video", "영상 링크 기록", "완성 영상의 Drive 원본 링크 필요");
+            } else if (!a.finalVideoUrl) return r("video", "영상 링크 기록", "완성 영상의 Drive 원본 링크 필요");
+          }
+          return pe(e, t, o, a)
+            ? W(e, t, o, a)
+              ? r("done", "완료", "", "done")
+              : r("publish", "게시 링크 기록", "실제 게시 후 링크를 기록하세요")
+            : r("video", "영상 링크 확인");
+        }
+        var We = (e, t) => {
+          let r = R(e, t);
+          return r ? { a: r, m: q(e, t, r), legacy: qt(t, r, q(e, t, r)) } : null;
+        };
+        function Tt(e, t, r, s) {
+          return y(e, (o) => {
+            let n = o.productionRequests.find((i) => i.id === t);
+            (!n.slots.find((i) => i.id === r)?.asset &&
+              n.slots.find((i) => i.id === r)?.state === "pending" &&
+              ht(o, t, r),
+              bt(o, t, r, s));
+          });
+        }
+        var Ar = (e, t, r, s, o) => y(e, (n) => yt(n, t, r, s, o)),
+          Rr = (e, t) => y(e, (r) => St(r, t)),
+          Ut = (e, t, r) => re(e, t, r);
+        function _r(e, t) {
+          return y(e, (r) => {
+            let s = r.productionRequests.find((l) => l.id === t);
+            if (!s) throw Error("이미지 제작 요청을 찾지 못했습니다.");
+            let o = P(r.productionRequests, s),
+              n = o.root;
+            if (!o.family.some((l) => l.reviewedAt)) throw Error("확정된 이미지 묶음이 아닙니다.");
+            let i = N(r, n.snapshot.contentId),
+              a = R(r, i);
+            if (a && a.version === n.snapshot.version && W(r, i, a, q(r, i, a)))
+              throw Error("이미 게시 기록이 있어 이미지 확정을 해제할 수 없습니다.");
+            let c = new Date().toISOString(),
+              d = !!n.finalVideoAt;
+            for (let l of o.family)
+              l.reviewedAt &&
+                (delete l.reviewedAt,
+                (l.updatedAt = c),
+                (l.events ||= []).push({ at: c, message: "사용자가 이미지 확정 해제" }));
+            (delete n.finalVideoAt,
+              r.state.events.push({
+                at: c,
+                message: i.product + " · 이미지 확정 해제" + (d ? " (영상 링크는 다시 확정 후 재기록 필요)" : ""),
+              }));
+          });
+        }
+        function xr(e, t) {
+          return y(e, (r) => {
+            let s = N(r, t),
+              o = R(r, s);
+            if (!r.state.finals[t]) throw Error("확인된 기존 이미지 묶음이 없습니다.");
+            if (o && W(r, s, o, q(r, s, o))) throw Error("이미 게시 기록이 있어 확인을 해제할 수 없습니다.");
+            (delete r.state.finals[t],
+              r.state.events.push({
+                at: new Date().toISOString(),
+                message: s.product + " · 기존 이미지 묶음 확인 해제",
+              }));
+          });
+        }
+        function Ft(e) {
+          let t = e.scene.timing.match(/([\d.]+)s?\s*[–—~−-]\s*([\d.]+)/),
+            r = Number(t[2]) - Number(t[1]),
+            s = "[직접 확인 후 작성]",
+            o = e.scene.shot || {},
+            n = (...a) => a.filter(Boolean).join(" / ") || s,
+            i = {
+              "SCENE CONTEXT": n(o.purpose && "목적: " + o.purpose, e.scene.visual),
+              "ACTIVE REFERENCES": "확정 이미지 원본 " + e.image.original_url,
+              WARDROBE: s,
+              "LOCATION MAP": s,
+              "FIRST FRAME / BLOCKING": n(
+                o.start_frame,
+                o.composition,
+                o.product_position && "제품: " + o.product_position,
+              ),
+              "FORMAT MODE": "9:16 vertical",
+              OPTICS: s,
+              CAMERA: n(o.camera_angle, o.shot_size),
+              ACTION: "0.0s " + e.scene.motion + " / " + r.toFixed(1) + "s",
+              PERFORMANCE: s,
+              PHYSICS: s,
+              LIGHTING: "natural light, low-saturation cream/warm-gray/olive",
+              STYLE: "smartphone-shot daily life photo feel",
+              "POSITIVE LOCKS": "no text, logo, subtitle, watermark; product shape from original reference",
+              AUDIO: "ambient sound and sound effects only; no voice, no music, no subtitles",
+              "END FRAME": o.end_frame || s,
+              TIMING: r.toFixed(1) + "s",
+            };
+          return [...te, ...ge].map((a) => a + ": " + i[a]).join(`
+`);
+        }
+        var Or = (e, t, r, s, o) =>
+            y(e, (n) =>
+              wt(n, {
+                content_id: t,
+                version: r,
+                scene_id: s.scene_id,
+                request_id: s.image.request_id,
+                image_version: s.image.image_version,
+                original_url: s.image.original_url,
+                prompt: o,
+              }),
+            ),
+          kr = (e, t, r) => y(e, (s) => $t(s, t, r)),
+          Nr = (e, t, r) => y(e, (s) => Rt(s, t, r)),
+          Cr = (e, t, r, s, o) =>
+            y(e, (n) => {
+              let i = R(n, N(n, t));
+              return ve(n, { content_id: t, version: i.version, parent_id: r, slot_id: s, note: o }).request.id;
+            }),
+          Dr = (e, t, r = "사용자 보관") =>
+            y(e, (s) => {
+              let o = s.contents.findIndex((i) => i.id === t);
+              if (o < 0) throw Error("보관할 콘텐츠를 찾지 못했습니다.");
+              let n = le(s, s.contents[o]);
+              return ((n.reason = r), s.contents.splice(o, 1), n.key);
+            }),
+          qr = (e, t) => y(e, (r) => he(r, t)),
+          Vr = (e, t, r, s) => y(e, (o) => ut(o, { content_id: t, version: r, text: s, kind: "script" }).request.id);
+        function Tr(e, t, r, s) {
+          return y(e, (o) => {
+            B(o);
+            let n = o.revisionRequests.find((p) => p.id === t);
+            if (!n) throw Error("수정 요청을 찾지 못했습니다.");
+            if (typeof s != "string" || !s.trim()) throw Error("변경 요약을 입력해주세요.");
+            let { rest: i, comments: a } = kt(r),
+              c = Ce(i, n.contentId),
+              d = Ve(o, { content_id: n.contentId, script: c.script, caption: c.caption });
+            (a?.length && (N(o, n.contentId).reviews.find((p) => p.version === d.version).expectedComments = a),
+              Ot(o, n.contentId, d.version, "수정본 (" + z(N(o, n.contentId), n.version) + ")"));
+            let l = pt(o, t).request;
+            return (
+              ft(o, { request_id: t, claim: l.claim, response_version: d.version, change_summary: s.trim() }),
+              d.version
+            );
+          });
+        }
+        var Ur = (e, t) =>
+            y(e, (r) => {
+              (mt(r, t), Nt(r));
+            }),
+          jt = (e, t) => {
+            let r = B(structuredClone(e));
+            return r.revisionRequests
+              .filter((s) => s.contentId === t && s.kind === "script")
+              .map((s) => ({ ...s, status: j(r, s) }));
+          };
+        function ze(e, t) {
+          let r = B(structuredClone(e)),
+            s = r.revisionRequests.find((a) => a.id === t),
+            o = r.contents.find((a) => a.id === s.contentId),
+            n = o.reviews.find((a) => a.version === s.version),
+            i = o.plan?.strategyV2;
+          return [
+            "[ISHARD 원고 수정 요청 " + s.id + "]",
+            "콘텐츠: " + o.id + " (" + o.format + ", 게시일 " + o.date + ")",
+            i
+              ? "구매 질문: " +
+                i.core.purchaseQuestion +
+                `
+심리 장벽: ` +
+                i.core.barrier +
+                `
+선택 이유: ` +
+                i.fit.selectionReason +
+                `
+표현 한계: ` +
+                (i.fit.claimLimit || "-")
+              : "기획: 구형(요약 없음)",
+            "",
+            "원본 버전: " + s.version,
+            "--- 대본 ---",
+            n.sections.map((a) => a.text).join(`
+`),
+            "--- 캡션 ---",
+            n.caption || "",
+            "",
+            "요청: " + s.text,
+            "",
+            "규칙: 확인된 공식 근거만 사용, 허위 후기·과장 효능·치료 효과 금지, 스토리보드·화면 연출은 쓰지 않음.",
+            "출력: 아래 JSON 한 개만",
+            JSON.stringify({ content_id: o.id, script: "수정한 대본", caption: "수정한 캡션" }),
+          ].join(`
+`);
+        }
+        var Jt = (e, t) => Be(structuredClone(e), t),
+          Fr = (e, t) => y(e, (r) => It(r, t, { confirm: "휴지통으로 이동", strict: !0 })),
+          jr = (e, t) => y(e, (r) => Et(r, t, { confirm: "선택 항목 복원" })),
+          Jr = /^ISHARD[-\w]+$/,
+          Mr = /^\d{4}-\d{2}-\d{2}$/;
+        function Lr(e, t) {
+          return y(e, (r) => {
+            let s = String(t.id || "").trim(),
+              o = String(t.topic || "").trim(),
+              n = String(t.product || "").trim(),
+              i = String(t.drive || "").trim();
+            if (!Jr.test(s) || s.length > 80)
+              throw Error("콘텐츠 ID는 ISHARD로 시작하고 영문·숫자·-·_만 사용해주세요.");
+            if (r.contents.some((a) => a.id === s) || (r.trash || []).some((a) => a.content?.id === s))
+              throw Error("이미 있는 콘텐츠 ID입니다(휴지통 포함).");
+            if (!Mr.test(t.date || "") || isNaN(Date.parse(t.date))) throw Error("게시일을 YYYY-MM-DD로 입력해주세요.");
+            if (!["Reel", "Carousel", "Image"].includes(t.format))
+              throw Error("형식은 릴스·캐러셀·이미지 중 하나입니다.");
+            if (!o || o.length > 200 || n.length > 100)
+              throw Error("주제(1~200자)와 제품명(100자 이내)을 확인해주세요.");
+            if (i && !G(i, !0))
+              throw Error("Drive 폴더 링크는 https://drive.google.com/drive/folders/… 형식이어야 합니다.");
+            return (
+              r.contents.push({
+                id: s,
+                date: t.date,
+                product: n || "-",
+                format: t.format,
+                topic: o,
+                plan: {},
+                reviews: [],
+                originalVersion: "",
+                sourceApproval: "대기",
+                production: "미착수",
+                drive: i,
+                images: [],
+                scenes: [],
+              }),
+              r.contents.sort((a, c) => a.date.localeCompare(c.date) || a.id.localeCompare(c.id)),
+              r.state.events.push({ at: new Date().toISOString(), message: s + " · 새 콘텐츠 등록" }),
+              s
+            );
+          });
+        }
+        function Pr(e, t, r, s) {
+          return mr(e, t, (o, n) => {
+            let i = o.quality;
+            if (r === "fit") {
+              let a = n.plan.productFacts || [];
+              if (!a.length) throw Error("공식 근거를 먼저 등록하세요.");
+              ((o.fit.verification = "verified"), (o.fit.sourceIds = a.map((c) => c.id)));
+            } else if (r === "text") ((i.claimReview = "pass"), (i.duplicateReview = "pass"));
+            else if (r === "human") i.humanConfirmed = !0;
+            else if (r === "score") {
+              if (!s || typeof s != "object") throw Error("점수를 입력해주세요.");
+              i.scores = s;
+            } else throw Error("알 수 없는 검수 동작입니다.");
+          });
+        }
+        function Hr(e, t, r, s, o = "") {
+          let n = /\/file\/d\/([\w-]+)/.exec(String(s || ""));
+          if (!n || !G(s)) throw Error("Drive 파일 링크(https://drive.google.com/file/d/…/view)를 입력해주세요.");
+          return Tt(e, t, r, {
+            fileName: String(o || r + ".png").slice(0, 200),
+            driveUrl: s,
+            previewKey: "drive/" + n[1],
+          });
+        }
+        function Gr(e, t, r, s) {
+          let o = N(e, t),
+            n = R(e, o);
+          if (!n) throw Error("확정된 원고가 없습니다.");
+          let i = re(e, t, n.version).scenes.find((a) => a.scene_id === r);
+          if (!i || !i.image) throw Error("확정된 장면 이미지를 찾지 못했습니다.");
+          if (String(s).includes("[직접 확인 후 작성]")) throw Error('"[직접 확인 후 작성]" 항목을 먼저 채워주세요.');
+          return Or(e, t, n.version, i, s);
+        }
+        var Mt = {
+            createContent: (e, t) => Lr(e, t),
+            importStrategy: (e, t) => fr(e, t.id, t.text),
+            addFact: (e, t) =>
+              vr(e, t.id, {
+                id: String(t.fact?.id || "").trim(),
+                fact: String(t.fact?.fact || "").trim(),
+                source: String(t.fact?.source || "").trim(),
+              }),
+            reviewStrategy: (e, t) => Pr(e, t.id, t.kind, t.scores),
+            importScript: (e, t) => hr(e, t.id, t.text, t.fileName),
+            approve: (e, t) => br(e, t.id, t.version),
+            release: (e, t) => yr(e, t.id, t.version),
+            requestScriptRevision: (e, t) => Vr(e, t.id, t.version, t.text),
+            answerRevision: (e, t) => Tr(e, t.requestId, t.text, t.summary),
+            withdrawScriptRevision: (e, t) => Ur(e, t.requestId),
+            saveStoryboard: (e, t) => wr(e, t.id, t.text),
+            requestImages: (e, t) => Ir(e, t.id, t.folder),
+            registerImage: (e, t) => Hr(e, t.requestId, t.slotId, t.url, t.fileName),
+            pick: (e, t) => Ar(e, t.rootId, t.slotId, t.candidateId, t.previewKey),
+            confirmImages: (e, t) => Rr(e, t.rootId),
+            unconfirmImages: (e, t) => _r(e, t.rootId),
+            requestRevision: (e, t) => Cr(e, t.id, t.rootId, t.slotId, t.note),
+            confirmLegacyImages: (e, t) => Er(e, t.id),
+            unconfirmLegacyImages: (e, t) => xr(e, t.id),
+            saveHiggsScene: (e, t) => Gr(e, t.id, t.sceneId, t.prompt),
+            finalVideo: (e, t) => kr(e, t.rootId, t.url),
+            legacyVideo: (e, t) => $r(e, t.id, t.url),
+            publish: (e, t) => Nr(e, t.id, t.url),
+            archive: (e, t) => Dr(e, t.id),
+            restore: (e, t) => qr(e, t.key),
+            bulkArchive: (e, t) => Fr(e, { ids: t.ids }),
+            bulkRestore: (e, t) => jr(e, t.keys),
+          },
+          Lt = { addImage: (e, t) => Tt(e, t.requestId, t.slotId, t.asset) };
+        function Pt(e, t) {
+          return {
+            revision: e.revision,
+            contents: e.contents
+              .filter((r) => r.date.startsWith(t))
+              .map((r) => {
+                let s = R(e, r),
+                  o = s ? q(e, r, s) : null,
+                  i =
+                    (o?.ready && o.slots?.find((d) => /cover|커버/i.test((d.original?.label || "") + " " + d.id)))
+                      ?.selected || (o?.ready ? o.slots?.[0]?.selected : null),
+                  a = i?.slot.asset,
+                  c = a?.previewKey
+                    ? "/api/production/preview?request=" +
+                      encodeURIComponent(i.request.id) +
+                      "&slot=" +
+                      encodeURIComponent(i.slot.id) +
+                      "&v=" +
+                      encodeURIComponent(a.previewKey.split("/").pop())
+                    : r.images?.[0]?.src;
+                return {
+                  id: r.id,
+                  date: r.date,
+                  product: r.product,
+                  format: r.format,
+                  feedPreview: c ? { src: c, label: i ? "선택·확인한 제작 이미지" : "기존 제작 이미지" } : null,
+                };
+              }),
+          };
+        }
+        var Wt = "ishard-studio-v3",
+          u = (e) =>
+            String(e ?? "").replace(
+              /[&<>"']/g,
+              (t) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[t],
+            ),
+          we = (e, t = {}) => ({
+            id: e,
+            date: "2026-11-04",
+            product: "(데모)",
+            format: "Reel",
+            topic: "데모",
+            plan: {},
+            reviews: [],
+            originalVersion: "",
+            sourceApproval: "대기",
+            production: "미착수",
+            drive: "",
+            images: [],
+            scenes: [],
+            ...t,
+          }),
+          Kr = () =>
+            we("ISHARD-DEMO-20261020-R00", {
+              date: "2026-11-02",
+              topic: "(데모) 구형 릴스 — 기존 이미지 확인 흐름",
+              originalVersion: "V1-B",
+              sourceApproval: "승인",
+              production: "완료",
+              drive: "https://drive.google.com/drive/folders/DEMOLEGACY",
+              reviews: [
+                {
+                  version: "V1-A",
+                  sourceApproved: !1,
+                  sections: [{ heading: "본문", text: "(데모) 구형 A안 대본" }],
+                  caption: "(데모) A안 캡션",
+                  slides: [],
+                },
+                {
+                  version: "V1-B",
+                  sourceApproved: !0,
+                  sections: [{ heading: "본문", text: "(데모) 구형 B안 대본 — 원본 승인 버전" }],
+                  caption: "(데모) B안 캡션",
+                  slides: [],
+                },
+              ],
+              images: [1, 2, 3].map((e) => ({
+                name: "DEMO-R00_B_0" + e + ".png",
+                id: "DEMOLEG" + e,
+                url: "https://drive.google.com/file/d/DEMOLEG" + e + "/view",
+                src: "/media/demo" + e + ".jpg",
+                version: "V1-B",
+              })),
+              scenes: [1, 2, 3].map((e) => ({
+                number: e,
+                timing: (e - 1) * 3 + "–" + e * 3 + "초",
+                subtitle: "",
+                visual: "(데모) 구형 장면 " + e,
+                prompt: "(데모) 구형 이미지 프롬프트 " + e,
+                reference: "",
+              })),
+            }),
+          et = () =>
+            Ke([
+              we("ISHARD-DEMO-20261104-R01", { topic: "새 제품 선택 기준" }),
+              we("ISHARD-DEMO-20261106-C01", {
+                date: "2026-11-06",
+                format: "Carousel",
+                topic: "(데모) 캐러셀 — 스토리보드 없이 장별 이미지",
+              }),
+              Kr(),
+              we("ISHARD-LEGACY-DEMO-02", {
+                topic: "구형 기획(strategyV2 없음)",
+                format: "Carousel",
+                plan: { persona: "구형" },
+              }),
+            ]),
+          C = !0,
+          v = Ke([]);
+        if (!C)
+          try {
+            v = JSON.parse(localStorage.getItem(Wt)) || et();
+          } catch {
+            v = et();
+          }
+        var Ie = 0,
+          Q = null,
+          Ee = !1,
+          zt = !C,
+          _ = "",
+          V = "",
+          $e = "",
+          w = null,
+          Re = null,
+          ue = "today",
+          _e = "all",
+          Ae = "list",
+          se = !1,
+          k = null,
+          ie = (() => {
+            let e = new Date();
+            return e.getFullYear() * 12 + e.getMonth();
+          })(),
+          U = new Set(),
+          J = new Set(),
+          Yr = "https://drive.google.com/drive/folders/DEMOFOLDER",
+          Qt = () => {
+            if (!C)
+              try {
+                localStorage.setItem(Wt, JSON.stringify(v));
+              } catch {}
+          },
+          oe = () => v.contents.find((e) => e.id === w),
+          ne = (e) => document.getElementById(e),
+          x = (e) => (ne(e)?.value || "").trim();
+        async function Ht(e) {
+          let t = await fetch(e, { headers: { Accept: "application/json" } }),
+            r = await t.json().catch(() => ({}));
+          if (!t.ok) throw Error(r.error || "서버 오류 " + t.status);
+          return r;
+        }
+        async function Wr() {
+          if (C) {
+            try {
+              let [e, t] = await Promise.all([Ht("/api/me"), Ht("/api/workspace")]);
+              ((Q = e), (v = t.workspace), (Ie = t.revision));
+            } catch (e) {
+              _ = "⚠ " + e.message;
+            }
+            zt = !0;
+          }
+          A();
+        }
+        function b(e, t, r, s) {
+          if (!C) {
+            try {
+              let n = (Mt[e] || Lt[e])(v, t);
+              ((v = n.w), Qt(), (_ = ""), (V = r || ""), s?.(n.result));
+            } catch (o) {
+              ((_ = "⚠ " + o.message), (V = ""));
+            }
+            return A();
+          }
+          Ee ||
+            ((Ee = !0),
+            A(),
+            fetch("/api/action", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ name: e, args: t, revision: Ie }),
+            })
+              .then(async (o) => {
+                let n = await o.json().catch(() => ({ error: "서버 응답을 읽지 못했습니다." }));
+                o.ok
+                  ? ((v = n.workspace), (Ie = n.revision), (_ = ""), (V = r || ""), s?.(n.result))
+                  : (n.conflict && n.workspace && ((v = n.workspace), (Ie = n.revision)),
+                    (_ = "⚠ " + (n.error || "저장하지 못했습니다.")),
+                    (V = ""));
+              })
+              .catch(() => {
+                ((_ = "⚠ 서버에 연결하지 못했습니다. 저장되지 않았습니다."), (V = ""));
+              })
+              .finally(() => {
+                ((Ee = !1), A());
+              }));
+        }
+        var O = (e) => Vt(v, e),
+          M = (e) => (e.k === "done" ? "publish" : e.k),
+          Qe = (e, t) => {
+            let r = e.files[0];
+            r && r.text().then((s) => t(s, r.name));
+            try {
+              e.value = "";
+            } catch {}
+          },
+          tt = null;
+        try {
+          window.claude?.use &&
+            window.claude
+              .use("downloads")
+              .then((e) => {
+                tt = e;
+              })
+              .catch(() => {});
+        } catch {}
+        async function zr(e, t) {
+          let r = JSON.stringify(t, null, 2);
+          if (tt) {
+            try {
+              (await tt.save({ filename: e, data: r }), (V = e + " 저장"), (_ = ""));
+            } catch (s) {
+              s?.code !== "declined" && (_ = "⚠ 이 화면에서는 파일 저장을 쓸 수 없습니다. JSON 복사를 사용해주세요.");
+            }
+            return A();
+          }
+          if (window.claude?.use)
+            return ((_ = "⚠ 이 화면에서는 파일 저장을 쓸 수 없습니다. JSON 복사를 사용해주세요."), A());
+          try {
+            let s = document.createElement("a");
+            ((s.href = URL.createObjectURL(new Blob([r], { type: "application/json" }))),
+              (s.download = e),
+              document.body.appendChild(s),
+              s.click(),
+              s.remove(),
+              (V = e + " 다운로드"));
+          } catch {
+            _ = "⚠ 다운로드가 막힌 환경입니다. JSON 복사를 사용해주세요.";
+          }
+          A();
+        }
+        async function Xe(e, t) {
+          try {
+            (await navigator.clipboard.writeText(e), (V = t + " 복사됨"));
+          } catch {
+            _ = "⚠ 복사 권한이 없습니다. 펼쳐진 내용을 직접 선택해 복사해주세요.";
+          }
+          A();
+        }
+        var Xt = [
+          ["psychology", "구매심리"],
+          ["fit", "제품 적합"],
+          ["evidence", "근거"],
+          ["flow", "설득 흐름"],
+          ["novelty", "새로움"],
+        ];
+        Object.assign(window, {
+          view(e) {
+            ((ue = e), (w = null), (se = !1), A());
+          },
+          more() {
+            ((se = !se), A());
+          },
+          month(e) {
+            ((ie += e), A());
+          },
+          thisMonth() {
+            let e = new Date();
+            ((ie = e.getFullYear() * 12 + e.getMonth()), A());
+          },
+          filt(e) {
+            ((_e = e), A());
+          },
+          logq(e) {
+            (($e = e), A());
+            let t = ne("lq");
+            t && (t.focus(), t.setSelectionRange(e.length, e.length));
+          },
+          go(e, t) {
+            w = e;
+            let r = e && v.contents.find((s) => s.id === e);
+            ((Re = t || (r ? M(O(r)) : null)), (se = !1), (_ = ""), (V = ""), A());
+            try {
+              window.scrollTo(0, 0);
+            } catch {}
+          },
+          tab(e) {
+            ((Re = e), A());
+          },
+          mode(e) {
+            ((Ae = e), A());
+          },
+          reset() {
+            C ||
+              (confirm("데모 데이터를 초기화할까요?") &&
+                ((v = et()), Qt(), (w = null), (_ = V = ""), U.clear(), J.clear(), (k = null), A()));
+          },
+          newContent() {
+            b(
+              "createContent",
+              {
+                id: x("nc-id"),
+                date: x("nc-date"),
+                format: x("nc-format"),
+                product: x("nc-product"),
+                topic: x("nc-topic"),
+                drive: x("nc-drive"),
+              },
+              "새 콘텐츠를 만들었습니다.",
+              (e) => go(e, "plan"),
+            );
+          },
+          archive() {
+            confirm(
+              "이 콘텐츠를 휴지통으로 보관할까요? 원고·스토리보드·이미지·링크 기록이 함께 보관되며 복원할 수 있습니다.",
+            ) && b("archive", { id: w }, "휴지통으로 보관했습니다.");
+          },
+          restoreT(e) {
+            b("restore", { key: e }, "복원했습니다.", () => J.delete(e));
+          },
+          impStrategy(e) {
+            Qe(e, (t) => b("importStrategy", { id: w, text: t }, "기획을 가져왔습니다. 사람 검수가 필요합니다."));
+          },
+          addFact() {
+            b("addFact", { id: w, fact: { id: x("fi"), fact: x("ff"), source: x("fs") } }, "공식 근거를 등록했습니다.");
+          },
+          review(e) {
+            let t = e === "score" ? Object.fromEntries(Xt.map(([r]) => [r, Number(x("sc-" + r))])) : void 0;
+            b(
+              "reviewStrategy",
+              { id: w, kind: e, scores: t },
+              {
+                fit: "근거 검증을 기록했습니다.",
+                text: "표현·중복 검수 통과를 기록했습니다.",
+                human: "사람 확인을 기록했습니다.",
+                score: "품질 점수를 저장했습니다.",
+              }[e],
+            );
+          },
+          impScript(e) {
+            Qe(e, (t, r) => b("importScript", { id: w, text: t, fileName: r }, "원고를 가져왔습니다."));
+          },
+          approve(e) {
+            b("approve", { id: w, version: e }, z(oe(), e) + " 확정");
+          },
+          release(e) {
+            b("release", { id: w, version: e }, "확정을 해제했습니다. 원고·제작물은 그대로 있습니다.");
+          },
+          dl(e) {
+            let t = oe(),
+              r = t.reviews.find((s) => s.version === e);
+            zr(t.id + "_" + (r.label || e).replace(/[^\w가-힣()-]+/g, "_") + ".json", Ye(t, e));
+          },
+          cp(e) {
+            let t = oe();
+            Xe(JSON.stringify(Ye(t, e), null, 2), z(t, e) + " JSON");
+          },
+          cpc(e) {
+            let t = oe().reviews.find((r) => r.version === e);
+            Xe(
+              t.expectedComments.join(`
+`),
+              "예상 댓글",
+            );
+          },
+          askRev(e) {
+            b(
+              "requestScriptRevision",
+              { id: w, version: e, text: x("rq-" + e) },
+              "수정 요청을 등록했습니다. 작가용 요청문을 복사해 전달하세요.",
+            );
+          },
+          brief(e) {
+            Xe(ze(v, e), "작가용 요청문");
+          },
+          answer(e) {
+            let t = ne("ra-" + e)?.files[0],
+              r = x("rs-" + e);
+            if (!t) {
+              ((_ = "⚠ 수정본 JSON 파일을 선택해주세요."), A());
+              return;
+            }
+            t.text().then((s) =>
+              b("answerRevision", { requestId: e, text: s, summary: r }, "수정본을 연결했습니다. 비교 후 확정하세요."),
+            );
+          },
+          withdraw(e) {
+            confirm("이 수정 요청을 철회할까요? 원고는 그대로 남습니다.") &&
+              b("withdrawScriptRevision", { requestId: e }, "요청을 철회했습니다.");
+          },
+          impBoard(e) {
+            Qe(e, (t) => b("saveStoryboard", { id: w, text: t }, "스토리보드를 저장했습니다."));
+          },
+          reqImages() {
+            b("requestImages", { id: w, folder: x("df") }, "이미지 제작 요청을 만들었습니다.");
+          },
+          regImg(e, t) {
+            b("registerImage", { requestId: e, slotId: t, url: x("iu-" + t) }, t + " 이미지를 등록했습니다.");
+          },
+          demoImg(e, t) {
+            if (C) return;
+            let r = Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+            b("addImage", {
+              requestId: e,
+              slotId: t,
+              asset: {
+                fileName: t + ".png",
+                driveUrl: "https://drive.google.com/file/d/DEMO" + r + "/view",
+                previewKey: "production/" + e + "/" + t + "-" + r,
+              },
+            });
+          },
+          choose(e, t, r, s) {
+            b("pick", { rootId: e, slotId: t, candidateId: r, previewKey: s });
+          },
+          confirmImg(e) {
+            b("confirmImages", { rootId: e }, "이미지 전체를 확정했습니다.");
+          },
+          unconfirmImg(e) {
+            confirm(`이미지 전체 확정을 해제할까요?
+선택한 이미지와 원본·수정본, 저장된 프롬프트 기록은 그대로 남습니다. 다시 고른 뒤 전체 확정을 눌러야 영상 단계로 넘어갑니다. 영상 링크를 기록했다면 다시 확정한 뒤 다시 기록해야 합니다.`) &&
+              b("unconfirmImages", { rootId: e }, "이미지 확정을 해제했습니다.");
+          },
+          revise(e, t) {
+            b(
+              "requestRevision",
+              { id: w, rootId: e, slotId: t, note: x("rv-" + t) },
+              "이미지 수정 요청을 등록했습니다.",
+            );
+          },
+          legacyUndo() {
+            confirm("기존 이미지 묶음 확인을 해제할까요? 이미지와 링크는 그대로 남습니다.") &&
+              b("unconfirmLegacyImages", { id: w }, "기존 이미지 확인을 해제했습니다.");
+          },
+          legacyOk() {
+            confirm("기존 이미지 묶음을 이 원고의 최종 이미지로 확인할까요? 게시하지는 않습니다.") &&
+              b("confirmLegacyImages", { id: w }, "기존 이미지 확인 기록을 남겼습니다.");
+          },
+          saveH(e) {
+            b("saveHiggsScene", { id: w, sceneId: e, prompt: ne("h-" + e).value }, e + " 프롬프트 저장");
+          },
+          video(e) {
+            let t = x("vu");
+            e
+              ? b("finalVideo", { rootId: e, url: t }, "영상 링크를 기록했습니다.")
+              : b("legacyVideo", { id: w, url: t }, "영상 링크를 기록했습니다.");
+          },
+          pub() {
+            b("publish", { id: w, url: x("pu") }, "게시 링크를 기록했습니다.");
+          },
+          tick(e, t) {
+            (t ? U.add(e) : U.delete(e), (k = null), A());
+          },
+          tickAll(e) {
+            (er().forEach(({ c: t }) => (e ? U.add(t.id) : U.delete(t.id))), (k = null), A());
+          },
+          bulkCheck() {
+            try {
+              ((k = Jt(v, { ids: [...U] })), (_ = ""));
+            } catch (e) {
+              _ = "⚠ " + e.message;
+            }
+            A();
+          },
+          bulkGo() {
+            let e = k.eligible.map((t) => t.id);
+            confirm(`미승인 기획 ${e.length}건을 휴지통으로 이동할까요? 복원할 수 있습니다.`) &&
+              b("bulkArchive", { ids: e }, `${e.length}건을 휴지통으로 이동했습니다.`, () => {
+                (U.clear(), (k = null));
+              });
+          },
+          ttick(e, t) {
+            (t ? J.add(e) : J.delete(e), A());
+          },
+          bulkRestore() {
+            let e = J.size;
+            b("bulkRestore", { keys: [...J] }, `${e}건을 복원했습니다.`, () => J.clear());
+          },
+        });
+        var rt = [
+            ["today", "오늘"],
+            ["inbox", "검토함"],
+            ["table", "작업표"],
+            ["cal", "캘린더"],
+            ["feed", "피드"],
+            ["log", "기록"],
+            ["trash", "휴지통"],
+          ],
+          Gt = (e) =>
+            e === "inbox"
+              ? v.contents.filter((t) => O(t).lane === "action").length
+              : e === "trash"
+                ? (v.trash || []).length
+                : 0,
+          st = (e, t) => t + (Gt(e) ? ` <span class="n">${Gt(e)}</span>` : ""),
+          Qr = () =>
+            `<nav class="tabs top">${rt.map(([e, t]) => `<button class="${e === ue && !w ? "on" : ""}" onclick="view('${e}')">${st(e, t)}</button>`).join("")}</nav>`,
+          Ze = ["today", "inbox", "cal"],
+          Xr = () =>
+            `<nav class="bnav">${Ze.map((e) => {
+              let t = rt.find((r) => r[0] === e)[1];
+              return `<button class="${e === ue && !w ? "on" : ""}" onclick="view('${e}')">${st(e, t)}</button>`;
+            }).join(
+              "",
+            )}<button class="${se || (!Ze.includes(ue) && !w) ? "on" : ""}" onclick="more()">더보기</button></nav>` +
+            (se
+              ? `<div class="sheet">${rt
+                  .filter((e) => !Ze.includes(e[0]))
+                  .map(([e, t]) => `<button onclick="view('${e}')">${st(e, t)}</button>`)
+                  .join("")}</div>`
+              : "");
+        function A() {
+          w && !oe() && (w = null);
+          let e =
+            (_ ? `<div class="card bad" id="msg" role="alert">${u(_)}</div>` : "") +
+            (V ? `<div class="card okm" id="note" role="status">${u(V)}</div>` : "");
+          if (!zt) {
+            ne("app").innerHTML = '<p class="mut">불러오는 중…</p>';
+            return;
+          }
+          let t =
+              C && Q
+                ? `<div class="who mut">${u(Q.email)} · ${{ owner: "소유자", editor: "편집자", viewer: "보기 전용" }[Q.role] || Q.role}${Ee ? " · 저장 중…" : ""}</div>`
+                : "",
+            r =
+              C && Q?.role === "viewer"
+                ? '<div class="card lock">보기 전용 계정입니다. 내용 확인·복사·다운로드만 할 수 있습니다.</div>'
+                : "";
+          ((ne("app").innerHTML =
+            Qr() +
+            t +
+            r +
+            e +
+            (w ? ms() : { today: ts, inbox: rs, table: os, cal: as, feed: ls, log: us, trash: ps }[ue]()) +
+            Xr()),
+            C && Q?.role === "viewer" && es());
+        }
+        var Zr =
+          /\b(newContent|archive|restoreT|addFact|review|approve|release|askRev|answer|withdraw|reqImages|regImg|choose|confirmImg|revise|legacyOk|saveH|video|pub|bulkGo|bulkRestore|bulkCheck|impStrategy|impScript|impBoard)\(/;
+        function es() {
+          (document.querySelectorAll("#app [onclick], #app [onchange]").forEach((e) => {
+            Zr.test(e.getAttribute("onclick") || e.getAttribute("onchange") || "") &&
+              ((e.disabled = !0), (e.title = "보기 전용"));
+          }),
+            document
+              .querySelectorAll("#app textarea, #app input:not(#lq), #app details.nc, #app details.rv")
+              .forEach((e) => {
+                e.tagName === "DETAILS" ? (e.style.display = "none") : (e.disabled = !0);
+              }));
+        }
+        var Zt = (e, t, r) =>
+            `<button class="p" onclick="go('${u(e.id)}','${M(t)}')">${u(r || t.l + " 열기")}</button>`,
+          X = (e) => `<div class="card lock">${e}</div>`,
+          $ = (e, t = "") => `<span class="tag ${t}">${u(e)}</span>`,
+          kstToday = () => new Date(Date.now() + 324e5).toISOString().slice(0, 10),
+          daysLeft = (c) => Math.round((Date.parse((c.date || "").slice(0, 10)) - Date.parse(kstToday())) / 864e5),
+          ddayTag = (c, s) => {
+            if (!c.date || s.lane === "done") return "";
+            let n = daysLeft(c);
+            return n < 0
+              ? $(-n + "일 지남", "bad")
+              : n === 0
+                ? $("오늘 게시", "bad")
+                : n === 1
+                  ? $("내일 게시", "wait")
+                  : n <= 3
+                    ? $("D-" + n, "wait")
+                    : "";
+          },
+          lateCount = () => v.contents.filter((c) => O(c).lane !== "done" && c.date && daysLeft(c) < 0).length;
+        function ts() {
+          let e = (r) => v.contents.filter((s) => O(s).lane === r).length,
+            t = { action: 0, waiting: 1, done: 2 };
+          return (
+            `<h1>오늘 할 일</h1><div class="stats"><button onclick="view('inbox')"><b>${e("action")}</b><span>결정 필요</span></button><button onclick="view('inbox')"><b>${e("waiting")}</b><span>제작 대기</span></button><button onclick="view('table')"><b>${e("done")}</b><span>완료</span></button>${lateCount() ? `<button class="late" onclick="view('table')"><b>${lateCount()}</b><span>게시일 지남</span></button>` : ""}</div>${C ? "" : '<p class="mut">미리보기 · 데이터는 이 브라우저에만 저장 · 실제 AI·이미지·영상 호출 없음 · 기존 엔진 규칙 사용</p>'}` +
+            [...v.contents]
+              .sort((r, s) => t[O(r).lane] - t[O(s).lane] || r.date.localeCompare(s.date))
+              .map((r) => {
+                let s = O(r);
+                return `<div class="card"><div class="row"><b class="cid">${u(r.id)}</b>${$(r.format)}</div><div>${u(r.topic)}</div><div class="mut">${u(r.date)} · ${$(s.l, s.lane === "waiting" ? "wait" : s.lane === "done" ? "done" : "")} ${ddayTag(r, s)}</div>${s.why ? `<div class="${s.lane === "action" ? "warn" : "mut"}">${u(s.why)}</div>` : ""}<div class="row" style="margin-top:8px">${s.lane === "action" ? Zt(r, s) : `<button onclick="go('${u(r.id)}','${M(s)}')">열기</button>`}</div></div>`;
+              })
+              .join("") +
+            (C ? "" : '<button onclick="reset()">데모 초기화</button>')
+          );
+        }
+        function rs() {
+          let e = v.contents.filter((r) => O(r).lane === "action").sort((r, s) => r.date.localeCompare(s.date)),
+            t = v.contents.filter((r) => O(r).lane === "waiting");
+          return (
+            '<h1>검토함</h1><p class="mut">내가 결정해야 하는 일만 모았습니다. 게시일이 가까운 순서입니다.</p>' +
+            (e
+              .map((r) => {
+                let s = O(r);
+                return `<div class="card"><div class="row"><b>${u(s.l)}</b>${$(r.format)}<span class="mut">${u(r.date)}</span>${ddayTag(r, s)}</div><div>${u(r.topic)}</div><div class="mut">${u(r.id)}${s.why ? " · " + u(s.why) : ""}</div><div class="row" style="margin-top:6px">${Zt(r, s, "검토하기")}</div></div>`;
+              })
+              .join("") || '<p class="mut">지금 결정할 일이 없습니다.</p>') +
+            (t.length
+              ? `<h2>제작 대기 (${t.length})</h2>` +
+                t
+                  .map((r) => {
+                    let s = O(r);
+                    return `<div class="card mut"><div class="row"><span>${u(s.l)}</span>${$(r.format)}<span>${u(r.date)}</span></div><div>${u(r.topic)}</div>${s.why ? `<div>${u(s.why)}</div>` : ""}<button onclick="go('${u(r.id)}','${M(s)}')">열기</button></div>`;
+                  })
+                  .join("")
+              : "")
+          );
+        }
+        var ss = [
+            ["plan", "기획"],
+            ["script", "원고"],
+            ["storyboard", "스토리보드"],
+            ["images", "이미지"],
+            ["video", "영상"],
+            ["publish", "게시"],
+            ["done", "완료"],
+          ],
+          er = () =>
+            [...v.contents]
+              .sort((e, t) => e.date.localeCompare(t.date))
+              .map((e) => ({ c: e, s: O(e) }))
+              .filter((e) => _e === "all" || e.s.k === _e);
+        function os() {
+          let e = er(),
+            t = e.length && e.every(({ c: s }) => U.has(s.id)),
+            r = U.size
+              ? `<div class="card sel"><div class="row"><b>${U.size}건 선택</b><button onclick="bulkCheck()">보관 미리보기</button><button onclick="tickAll(false)">선택 해제</button></div>${k ? is() : '<p class="mut">보관 전에 미리보기로 보호 대상(승인·제작·게시 기록)을 먼저 확인합니다.</p>'}</div>`
+              : "";
+          return (
+            ns() +
+            `<div class="row" style="margin-bottom:8px"><label class="mut" for="fs-st">단계</label><select id="fs-st" onchange="filt(this.value)"><option value="all">전체</option>${ss.map(([s, o]) => `<option value="${s}" ${_e === s ? "selected" : ""}>${o}</option>`).join("")}</select><span class="mut">${e.length}건</span></div>${r}
+  <div class="tablewrap"><table><thead><tr><th><input type="checkbox" aria-label="보이는 항목 전체 선택" ${t ? "checked" : ""} onchange="tickAll(this.checked)"></th><th>게시일</th><th>콘텐츠</th><th>단계</th><th></th></tr></thead><tbody>${e.map(({ c: s, s: o }) => `<tr><td><input type="checkbox" aria-label="${u(s.id)} 선택" ${U.has(s.id) ? "checked" : ""} onchange="tick('${u(s.id)}',this.checked)"></td><td>${u(s.date.slice(5))} ${ddayTag(s, o)}<div class="mut">${u(s.format)}</div></td><td>${u(s.topic)}<div class="mut">${u(s.id)}</div></td><td>${u(o.l)}${o.why ? `<div class="mut" style="font-size:12px">${u(o.why)}</div>` : ""}</td><td><button onclick="go('${u(s.id)}','${M(o)}')">열기</button></td></tr>`).join("") || '<tr><td colspan="5" class="mut">해당 단계의 콘텐츠가 없습니다.</td></tr>'}</tbody></table></div>`
+          );
+        }
+        function ns() {
+          let e = new Date(Date.now() + 324e5).toISOString().slice(0, 10);
+          return `<details class="card nc"><summary><b>+ 새 콘텐츠</b></summary><div class="ncg"><label>콘텐츠 ID<input type="text" id="nc-id" placeholder="ISHARD-30-${e.replaceAll("-", "")}-R01"></label><label>게시일<input type="text" id="nc-date" value="${e}" inputmode="numeric"></label><label>형식<select id="nc-format"><option value="Reel">릴스</option><option value="Carousel">캐러셀</option><option value="Image">이미지</option></select></label><label>제품<input type="text" id="nc-product" placeholder="제품명"></label><label class="w">주제<input type="text" id="nc-topic" placeholder="이번 콘텐츠의 핵심"></label><label class="w">Drive 폴더(선택)<input type="text" id="nc-drive" placeholder="https://drive.google.com/drive/folders/…"></label></div><button class="p" onclick="newContent()">만들기</button></details>`;
+        }
+        function is() {
+          return (
+            `<div class="bp"><div><b>이동 가능 ${k.eligible_count}건</b> <span class="mut">(미승인 기획)</span>${k.eligible.map((e) => `<div class="mut">· ${u(e.id)} ${u(e.topic || "")}</div>`).join("")}</div>` +
+            (k.protected_count
+              ? `<div><b>보호 ${k.protected_count}건</b> <span class="mut">(이동하지 않음)</span>${k.protected.map((e) => `<div class="mut">· ${u(e.id)} — ${u(e.reasons.join(", "))}</div>`).join("")}</div>`
+              : "") +
+            `<p class="mut">${u(k.preserved)}</p>${k.eligible_count ? `<button class="p" onclick="bulkGo()">미승인 ${k.eligible_count}건 휴지통으로 이동</button>` : '<p class="mut">이동할 수 있는 항목이 없습니다.</p>'}</div>`
+          );
+        }
+        function as() {
+          let e = Math.floor(ie / 12),
+            t = ie % 12,
+            r = new Date(e, t, 1).getDay(),
+            s = new Date(e, t + 1, 0).getDate(),
+            o = (i) => String(i).padStart(2, "0"),
+            n = ["일", "월", "화", "수", "목", "금", "토"].map((i) => `<div class="h">${i}</div>`);
+          for (let i = 0; i < r; i++) n.push('<div style="border:0"></div>');
+          for (let i = 1; i <= s; i++) {
+            let a = e + "-" + o(t + 1) + "-" + o(i),
+              c = v.contents.filter((d) => d.date.slice(0, 10) === a);
+            n.push(
+              `<div><b>${i}</b>${c
+                .map((d) => {
+                  let l = O(d);
+                  return `<button class="chip ${l.lane}" onclick="go('${u(d.id)}','${M(l)}')">${u(d.format[0])} ${u(l.l)}</button>`;
+                })
+                .join("")}</div>`,
+            );
+          }
+          return (
+            `<div class="row" style="margin-bottom:8px"><button onclick="month(-1)" aria-label="이전 달">‹</button><b>${e}년 ${t + 1}월</b><button onclick="month(1)" aria-label="다음 달">›</button><button onclick="thisMonth()">이번 달</button></div><div class="cal">${n.join("")}</div><p class="mut">R=릴스 · C=캐러셀 · I=이미지. 게시일 기준이며 실제 SNS 게시 현황이 아닙니다.</p>` +
+            cs(e + "-" + o(t + 1))
+          );
+        }
+        function cs(e) {
+          let t = v.contents.filter((r) => r.date.startsWith(e)).sort((r, s) => r.date.localeCompare(s.date));
+          return (
+            `<h2>이 달 일정 (${t.length})</h2>` +
+            (t
+              .map((r) => {
+                let s = O(r),
+                  o = new Date(r.date + "T00:00:00");
+                return `<button class="agenda" onclick="go('${u(r.id)}','${M(s)}')"><span class="ad">${o.getMonth() + 1}/${o.getDate()} ${"일월화수목금토"[o.getDay()]}</span><span class="at">${u(r.topic)}<small>${u(r.format)} · ${u(r.id)}</small></span>${$(s.l, s.lane === "waiting" ? "wait" : "")}</button>`;
+              })
+              .join("") || '<p class="mut">이 달에 예정된 콘텐츠가 없습니다.</p>')
+          );
+        }
+        var Bt = ["#d9cfb8", "#c4c9a8", "#cfc2b0", "#b9bfa1", "#e0d6c4", "#cbc4b3"],
+          ds = (e) => {
+            let t = 0;
+            for (let r of e) t = (t * 31 + r.charCodeAt(0)) >>> 0;
+            return Bt[t % Bt.length];
+          };
+        function ls() {
+          let e = Math.floor(ie / 12),
+            t = ie % 12,
+            r = e + "-" + String(t + 1).padStart(2, "0"),
+            s = Pt(v, r).contents.sort((n, i) => i.date.localeCompare(n.date)),
+            o = s.filter((n) => n.feedPreview).length;
+          return (
+            `<div class="row" style="margin-bottom:6px"><button onclick="month(-1)" aria-label="이전 달">‹</button><b>${e}년 ${t + 1}월 피드</b><button onclick="month(1)" aria-label="다음 달">›</button><button onclick="thisMonth()">이번 달</button></div><p class="mut">${s.length}개 중 ${o}개 이미지 확정 · 게시일 기준 배치 시뮬레이션이며 실제 인스타그램 현황이 아닙니다. 확정되지 않은 이미지는 표시하지 않습니다.</p>` +
+            (s.length
+              ? `<div class="feed">${s
+                  .map((n) => {
+                    let i = v.contents.find((d) => d.id === n.id),
+                      a = O(i),
+                      c = a.k === "done";
+                    return `<button class="tile" onclick="go('${u(n.id)}','${M(a)}')" style="${n.feedPreview ? "background:" + ds(n.feedPreview.src) : ""}">${n.feedPreview ? "" : "<span>이미지 미확정</span>"}<small>${u(n.date.slice(5))} ${u(n.format[0])}${c ? " · 게시됨" : ""}</small></button>`;
+                  })
+                  .join(
+                    "",
+                  )}</div><p class="mut">데모에서는 확정 이미지를 색 블록으로 표시합니다. 실제 운영에서는 선택·확정한 커버(없으면 첫 장면) 미리보기가 들어갑니다.</p>`
+              : '<p class="mut">이 달에 예정된 콘텐츠가 없습니다.</p>')
+          );
+        }
+        function us() {
+          let e = [
+              ...v.state.events.map((r) => ({ ...r, src: "" })),
+              ...v.productionRequests.flatMap((r) =>
+                (r.events || []).map((s) => ({ ...s, src: r.id + " · " + r.snapshot.contentId })),
+              ),
+              ...(v.revisionRequests || []).flatMap((r) =>
+                (r.events || []).map((s) => ({ ...s, src: r.id + " · " + r.contentId })),
+              ),
+            ]
+              .filter((r) => !$e || (r.message + r.src).toLowerCase().includes($e.toLowerCase()))
+              .sort((r, s) => s.at.localeCompare(r.at))
+              .slice(0, 200),
+            t = (r) => {
+              let s = new Date(r);
+              return isNaN(s)
+                ? r
+                : s.toLocaleString("ko-KR", {
+                    timeZone: "Asia/Seoul",
+                    month: "numeric",
+                    day: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  });
+            };
+          return (
+            `<h1>제작 기록</h1><input type="text" id="lq" value="${u($e)}" placeholder="콘텐츠 ID·제품·요청번호로 찾기" aria-label="기록 검색" oninput="logq(this.value)"><p class="mut">확정·해제·이미지 선택·수정 요청·링크 기록 등 엔진이 남긴 기록입니다. 최근 200건.</p>` +
+            (e
+              .map(
+                (r) =>
+                  `<div class="logrow"><span class="mut">${u(t(r.at))}</span><span>${u(r.message)}${r.src ? `<span class="mut"> · ${u(r.src)}</span>` : ""}</span></div>`,
+              )
+              .join("") || '<p class="mut">기록이 없습니다.</p>')
+          );
+        }
+        function ps() {
+          let e = v.trash || [];
+          return e.length
+            ? `<h1>휴지통</h1>${J.size ? `<div class="card sel row"><b>${J.size}건 선택</b><button class="p" onclick="bulkRestore()">선택 항목 복원</button></div>` : ""}` +
+                e
+                  .map(
+                    (t) =>
+                      `<div class="card"><label class="row"><input type="checkbox" aria-label="${u(t.content.id)} 선택" ${J.has(t.key) ? "checked" : ""} onchange="ttick('${u(t.key)}',this.checked)"><b class="cid">${u(t.content.id)}</b>${$(t.content.format)}</label><div class="mut">${u(t.content.topic)} · 보관 ${u(t.at.slice(0, 10))}${t.reason ? " · " + u(t.reason) : ""}</div><div class="mut">원고 ${t.content.reviews.length}개${t.approval ? " · 확정 기록 있음" : ""}${t.storyboard ? " · 스토리보드 있음" : ""}</div><button onclick="restoreT('${u(t.key)}')">복원</button></div>`,
+                  )
+                  .join("")
+            : '<h1>휴지통</h1><p class="mut">휴지통이 비어 있습니다. 보관한 콘텐츠는 원고·이미지 기록과 함께 복원할 수 있습니다.</p>';
+        }
+        var fs = (e) =>
+          e.format === "Reel"
+            ? [
+                ["plan", "기획"],
+                ["script", "원고"],
+                ["storyboard", "스토리보드"],
+                ["images", "이미지"],
+                ["video", "영상"],
+                ["publish", "게시"],
+              ]
+            : [
+                ["plan", "기획"],
+                ["script", "원고"],
+                ["images", "이미지"],
+                ["publish", "게시"],
+              ];
+        function ms() {
+          let e = oe(),
+            t = O(e),
+            r = R(v, e),
+            s = fs(e),
+            o = Re === "done" ? "publish" : Re || M(t);
+          return (
+            s.some((n) => n[0] === o) || (o = "images"),
+            `<div class="hdr"><button onclick="go(null)">← 목록</button><b title="${u(e.id)}">${u(e.id)}</b><button onclick="archive()">보관</button></div>
+  <div class="mut">${u(e.format)} · ${u(e.date)} · 확정 원고 ${u(r ? z(e, r.version) : "없음")}</div><div class="next">다음: <b>${u(t.l)}</b>${t.why ? ` <span class="mut">— ${u(t.why)}</span>` : ""}</div>
+  <div class="tabs">${s.map(([n, i]) => `<button class="${n === o ? "on" : ""}" onclick="tab('${n}')">${i}${n === M(t) && t.k !== "done" ? " •" : ""}</button>`).join("")}</div>` +
+              { plan: vs, script: gs, storyboard: bs, images: ys, video: Ss, publish: ws }[o](e, r)
+          );
+        }
+        var safeUrl = (x) => (/^https:\/\//.test(String(x || "")) ? String(x) : ""),
+          linkTo = (x, label) => {
+            let h = safeUrl(x);
+            if (!h) return u(label || x || "");
+            let host = h.replace(/^https:\/\/(www\.)?/, "").split("/")[0];
+            return `<a href="${u(h)}" target="_blank" rel="noopener noreferrer">${u(label && label !== h ? label : host)}</a>`;
+          },
+          kvList = (o) =>
+            o && typeof o == "object" && !Array.isArray(o)
+              ? `<dl class="kv">${Object.entries(o)
+                  .filter(([, val]) => val !== "" && val != null && typeof val != "object")
+                  .map(([k, val]) => `<dt>${u(k)}</dt><dd>${u(val)}</dd>`)
+                  .join("")}</dl>`
+              : "";
+        function planBrief(e) {
+          let p = e.plan || {},
+            facts = Array.isArray(p.productFacts) ? p.productFacts : [],
+            srcs = Array.isArray(p.sources) ? p.sources : [],
+            trendSrcs = srcs.filter((x) => x && (x.limit || x.publishedAt || x.period) && !/공식/.test(x.type || "")),
+            refs = Array.isArray(p.referenceApplication) ? p.referenceApplication : [],
+            hooks = Array.isArray(p.hookDirection) ? p.hookDirection : [],
+            hasTrend = !!(p.trendReportId || (p.signalIds || []).length || p.trendApplication || trendSrcs.length),
+            life = p.lifeContext || p.persona,
+            hyp = p.responseHypothesis,
+            sec = (title, body) => (body ? `<h2>${title}</h2>${body}` : ""),
+            empty = (msg) => `<div class="warn">${msg}</div>`;
+          if (!Object.keys(p).some((k) => k !== "strategyV2" && k !== "productFacts"))
+            return p.strategyV2
+              ? ""
+              : `<div class="card brief"><b>기획 근거</b>${empty("이 콘텐츠에는 아직 기획 근거(목적·생활 장면·트렌드·레퍼런스·제품 근거)가 없습니다. 원고를 쓰기 전에 기획을 먼저 채워주세요.")}</div>`;
+          return (
+            `<div class="card brief"><div class="row"><b>기획 근거</b>${p.category ? $(p.category) : ""}${p.trendClassification ? $(p.trendClassification === "trend" ? "트렌드 적용" : p.trendClassification) : ""}${p.status ? `<span class="mut">${u(p.status)}</span>` : ""}</div>` +
+            (p.purpose ? `<p><b>목적</b> ${u(p.purpose)}</p>` : "") +
+            sec("누구의 어떤 순간", kvList(life)) +
+            sec(
+              "반영한 트렌드",
+              hasTrend
+                ? `${p.trendReportId ? `<div class="mut">리포트 ${u(p.trendReportId)}${(p.signalIds || []).length ? " · 신호 " + u(p.signalIds.join(", ")) : ""}</div>` : ""}${p.trendApplication ? `<p>${u(p.trendApplication)}</p>` : ""}${trendSrcs
+                    .map(
+                      (x) =>
+                        `<div class="src">${linkTo(x.url, x.type)}${x.publishedAt ? ` <span class="mut">발행 ${u(x.publishedAt)}</span>` : ""}${x.period ? ` <span class="mut">기간 ${u(x.period)}</span>` : ""}${x.limit ? `<div class="mut">한계: ${u(x.limit)}</div>` : ""}</div>`,
+                    )
+                    .join("")}`
+                : empty("이 기획에 연결된 트렌드 신호가 없습니다."),
+            ) +
+            sec(
+              "참고한 레퍼런스",
+              refs.length
+                ? refs
+                    .map(
+                      (x) =>
+                        `<div class="src">${linkTo(x.url, (x.id ? x.id + " · " : "") + "레퍼런스 보기")}${x.observedAt ? ` <span class="mut">관찰 ${u(x.observedAt)}</span>` : ""}${x.observation ? `<div>가져온 점: ${u(x.observation)}</div>` : ""}${x.reuseLimit ? `<div class="mut">한계: ${u(x.reuseLimit)}</div>` : ""}</div>`,
+                    )
+                    .join("")
+                : empty("참고한 레퍼런스 영상이 없습니다. 첫 장면·컷 구성을 빌려올 레퍼런스를 연결하면 원고와 스토리보드가 구체적이 됩니다."),
+            ) +
+            sec(
+              "후킹 방향",
+              hooks.length
+                ? `<ul>${hooks.map((x) => `<li>${u(x.angle || x)}${x.hookId ? ` <span class="mut">${u(x.hookId)}</span>` : ""}</li>`).join("")}</ul>`
+                : "",
+            ) +
+            (p.formatDirection ? `<p class="mut">형식 지시: ${u(p.formatDirection)}</p>` : "") +
+            sec(
+              "제품 근거",
+              facts.length
+                ? `<ul>${facts.map((x) => `<li>${u(x.fact)} ${x.source ? linkTo(x.source, "출처") : ""}${x.checkedAt ? ` <span class="mut">${u(x.checkedAt)} 확인</span>` : ""}</li>`).join("")}</ul>`
+                : empty("공식 제품 근거가 없습니다."),
+            ) +
+            sec(
+              "반응 가설",
+              hyp && typeof hyp == "object"
+                ? `<p>${u(hyp.variable || "")}${hyp.metric ? ` → <b>${u(hyp.metric)}</b>` : ""}</p>${hyp.limit ? `<div class="mut">${u(hyp.limit)}</div>` : ""}`
+                : p.performanceHypothesis
+                  ? `<p>${u(p.performanceHypothesis)}</p>`
+                  : "",
+            ) +
+            ((p.forbiddenClaims || []).length
+              ? `<details><summary>쓰지 않을 표현 ${p.forbiddenClaims.length}개</summary><ul>${p.forbiddenClaims.map((x) => `<li>${u(x)}</li>`).join("")}</ul></details>`
+              : "") +
+            `</div>`
+          );
+        }
+        function vs(e) {
+          let t = e.plan.strategyV2,
+            r = be(e);
+          return (
+            planBrief(e) +
+            `<div class="card"><b>구매심리 기획 V2</b> ${t ? $(xe[t.persona.type]) + $(t.persona.evidenceStatus === "customer_data" ? "고객 데이터 근거" : "가설") : ""}${r.legacy ? '<p class="mut">구형 기획 — 변환·차단하지 않습니다.</p>' : `<p>점수 ${r.score}/100 · 원고 전달 ${r.ready ? "<b>가능</b>" : '<b class="bad">잠김</b>'}</p>${r.reasons.map((s) => `<div class="bad">• ${u(s)}</div>`).join("")}`}${t ? `<dl class="kv"><dt>구매 질문</dt><dd>${u(t.core.purchaseQuestion)}</dd><dt>심리 장벽</dt><dd>${u(t.core.barrier)}</dd><dt>지금 쓰는 대안</dt><dd>${u(t.persona.currentAlternative)}</dd><dt>포기 못 하는 조건</dt><dd>${u(t.persona.preserve)}</dd><dt>ISHARD 선택 이유</dt><dd>${u(t.fit.selectionReason)}</dd></dl>` : ""}</div>
+  <div class="card"><b>기획 JSON 가져오기</b> <span class="mut">(저장만 · 사람 확인은 항상 해제 상태)</span><br><input type="file" accept=".json" aria-label="기획 JSON 파일" onchange="impStrategy(this)"></div>` +
+            (t
+              ? `<div class="card"><b>공식 근거 등록</b> <span class="mut">(상세페이지 등 실제 출처만)</span><input type="text" id="fi" placeholder="ID 예: F1" aria-label="근거 ID"><input type="text" id="ff" placeholder="사실" aria-label="사실"><input type="text" id="fs" placeholder="출처 URL/자료명" aria-label="출처"><button onclick="addFact()">등록</button>${(e.plan.productFacts || []).map((s) => `<div class="mut">${u(s.id)}: ${u(s.fact)} (${u(s.source)})</div>`).join("")}</div><div class="card"><b>사람 검수</b><div class="row"><button onclick="review('fit')">근거 검증 완료</button><button onclick="review('text')">표현·중복 검수 통과</button><button class="p" onclick="review('human')">내가 확인함</button></div></div><div class="scores">${Xt.map(([s, o]) => `<label>${o}<input type="number" min="0" max="20" step="1" id="sc-${s}" value="${t.quality.scores?.[s] ?? ""}" inputmode="numeric"></label>`).join("")}<button onclick="review('score')">점수 저장</button></div><p class="mut">항목별 0~20점, 합계 80점 이상이어야 원고로 넘어갑니다. 점수는 AI·내부 평가이며 실제 성과 예측이 아닙니다.</p></div>`
+              : "")
+          );
+        }
+        var ot = (e) =>
+            e.sections.map((t) => t.text).join(`
+`),
+          tr = {
+            received: "접수",
+            processing: "작성 중",
+            review: "검토 대기",
+            blocked: "보류",
+            approved: "확정됨",
+            withdrawn: "철회",
+          };
+        function gs(e, t) {
+          let r = jt(v, e.id),
+            s = r.filter((i) => !["approved", "withdrawn"].includes(i.status)),
+            o = [...e.reviews].sort((i, a) => (t && a.version === t.version) - (t && i.version === t.version)),
+            n = (i, a) => {
+              let c = t && t.version === i.version;
+              return `<div class="card ver ${c ? "appr" : ""}"><div class="row"><b>${u(i.label || i.version)}</b>${c ? $("확정", "done") : ""}${i.author === "user" ? "" : $("기존")}</div>${i.label ? `<div class="mut vid">${u(i.version)}</div>` : ""}<h2>대본</h2><div class="pre">${u(ot(i))}</div><h2>캡션</h2><div class="pre">${u(i.caption || "")}</div>${i.expectedComments?.length ? `<details class="ec"><summary>예상 댓글 ${i.expectedComments.length}개 <span class="mut">(가상 시청자 반응 예시 · 실제 후기 아님)</span></summary><ul>${i.expectedComments.map((d) => `<li>${u(d)}</li>`).join("")}</ul><button onclick="cpc('${u(i.version)}')">예상 댓글 복사</button></details>` : ""}
+    <div class="row" style="margin-top:8px">${c ? `<button onclick="release('${u(i.version)}')">확정 해제</button>` : `<button class="p" onclick="approve('${u(i.version)}')">이 원고로 확정</button>`}<button onclick="dl('${u(i.version)}')">JSON 받기</button><button onclick="cp('${u(i.version)}')">JSON 복사</button></div>
+    ${a ? "" : `<details class="rv"><summary>이 버전 수정 요청</summary><textarea id="rq-${u(i.version)}" placeholder="무엇을 바꿀지 구체적으로 (예: 첫 3초 문장을 12자 이내로)"></textarea><button onclick="askRev('${u(i.version)}')">수정 요청 등록</button></details>`}</div>`;
+            };
+          return (
+            '<div class="card"><div class="row"><b>원고 JSON 가져오기</b><span class="mut">A/B/C를 파일 하나씩 · 대본·캡션만</span></div><input type="file" accept=".json" aria-label="원고 JSON 파일" onchange="impScript(this)"></div>' +
+            s.map((i) => hs(e, i)).join("") +
+            (e.reviews.length
+              ? (e.reviews.length > 1
+                  ? `<div class="seg" role="group" aria-label="보기 방식"><button class="${Ae === "list" ? "on" : ""}" onclick="mode('list')">목록</button><button class="${Ae === "compare" ? "on" : ""}" onclick="mode('compare')">나란히 비교 (${e.reviews.length})</button></div>`
+                  : "") +
+                (Ae === "compare" && e.reviews.length > 1
+                  ? `<div class="cmp">${o.map((i) => n(i, !0)).join("")}</div><p class="mut">옆으로 넘겨 비교하세요.</p>`
+                  : o.map((i, a) => (a === 1 ? `<h2>다른 버전 (${o.length - 1})</h2>` : "") + n(i, !1)).join(""))
+              : '<p class="mut">가져온 원고가 없습니다.</p>') +
+            (r.length > s.length
+              ? `<details class="card"><summary>지난 수정 요청 (${r.length - s.length})</summary>${r
+                  .filter((i) => !s.includes(i))
+                  .map(
+                    (i) =>
+                      `<div class="mut">${u(i.id)} · ${u(i.version)} · ${u(tr[i.status] || i.status)} — ${u(i.text)}</div>`,
+                  )
+                  .join("")}</details>`
+              : "") +
+            '<p class="mut">원고 JSON 형식: content_id · script · caption, 선택 항목 comments(예상 댓글, 가상 예시 최대 10개).</p>'
+          );
+        }
+        function hs(e, t) {
+          let r = e.reviews.find((o) => o.version === t.version),
+            s = t.responseVersion && e.reviews.find((o) => o.version === t.responseVersion);
+          return (
+            `<div class="card rev"><div class="row"><b>원고 수정 요청</b>${$(tr[t.status] || t.status, t.status === "review" ? "" : "wait")}<span class="mut">${u(t.id)}</span></div><div>요청: ${u(t.text)}</div><div class="mut">대상 ${u(z(e, t.version))} · 미해결 요청이 있는 동안 이미지 제작은 보류됩니다.</div>` +
+            (s
+              ? `<div class="cmp two"><div class="card ver appr"><b>수정본</b> <span class="mut vid">${u(s.version)}</span><div class="pre">${u(ot(s))}</div><div class="mut">변경 요약: ${u(t.changeSummary)}</div></div><div class="card ver"><b>원본 ${u(z(e, r.version))}</b> <span class="mut vid">${u(r.version)}</span><div class="pre">${u(ot(r))}</div></div></div><div class="row"><button class="p" onclick="approve('${u(s.version)}')">수정본으로 확정</button><button onclick="withdraw('${u(t.id)}')">철회</button></div>`
+              : `<div class="row"><button onclick="brief('${u(t.id)}')">작가용 요청문 복사</button><button onclick="withdraw('${u(t.id)}')">철회</button></div><details class="rv"><summary>수정본 가져오기</summary><input type="file" id="ra-${u(t.id)}" accept=".json" aria-label="수정본 JSON"><input type="text" id="rs-${u(t.id)}" placeholder="변경 요약 (예: 첫 문장 12자로 축소)" aria-label="변경 요약"><button class="p" onclick="answer('${u(t.id)}')">수정본 연결</button></details><details><summary class="mut">요청문 미리보기</summary><div class="pre mut">${u(ze(v, t.id))}</div></details>`) +
+            "</div>"
+          );
+        }
+        function bs(e, t) {
+          if (!t) return X("원고를 먼저 확정하세요.");
+          let r = Se(v, e, t),
+            s = Dt(r),
+            o = `<details class="card"><summary>기준 원고 ${u(t.version)} (읽기 전용)</summary><div class="pre mut">${u(
+              t.sections.map((n) => n.text).join(`
+`),
+            )}</div></details>`;
+          return r?.legacy
+            ? o +
+                '<p class="mut">기존 앱에서 만든 장면표입니다(읽기 전용). 새로 만들려면 다른 원고 버전을 확정한 뒤 스토리보드 JSON을 가져오세요.</p>' +
+                r.scenes
+                  .map(
+                    (n) =>
+                      `<div class="card"><b>${u(n.number)}</b> ${$(n.timing)}<div class="pre">${u(n.visual)}</div></div>`,
+                  )
+                  .join("")
+            : o +
+                '<div class="card"><b>스토리보드 JSON 가져오기</b> <span class="mut">기존 4필드 또는 구도 정보 포함 확장 형식</span><br><input type="file" accept=".json" aria-label="스토리보드 JSON 파일" onchange="impBoard(this)"></div>' +
+                s.map((n) => `<div class="card warnbox">${u(n)}</div>`).join("") +
+                (r
+                  ? r.scenes
+                      .map(
+                        (n, i) =>
+                          `<div class="card"><div class="row"><b>scene-${i + 1}</b>${$(n.timing)}${n.shot?.camera_angle ? $(n.shot.camera_angle) : ""}${n.shot?.shot_size ? $(n.shot.shot_size) : ""}</div><div>${u(n.visual)}</div><div class="mut">움직임: ${u(n.motion)}</div>${
+                            n.shot
+                              ? `<dl class="kv">${ye
+                                  .filter((a) => n.shot[a] && !["camera_angle", "shot_size"].includes(a))
+                                  .map((a) => `<dt>${Ct[a]}</dt><dd>${u(n.shot[a])}</dd>`)
+                                  .join("")}</dl>`
+                              : '<div class="mut">구도 정보 없음</div>'
+                          }</div>`,
+                      )
+                      .join("")
+                  : '<p class="mut">아직 스토리보드가 없습니다.</p>');
+        }
+        var Kt = (e, t, r) =>
+            `<div class="regrow"><input type="text" id="iu-${u(t)}" placeholder="결과 이미지 Drive 링크" aria-label="${u(t)} Drive 링크"><button onclick="regImg('${e}','${u(t)}')">등록</button></div>` +
+            (C ? "" : `<button onclick="demoImg('${e}','${u(t)}')">${r}</button>`),
+          Yt = ["#d9cfb8", "#c4c9a8", "#cfc2b0", "#b9bfa1", "#e0d6c4"];
+        function ys(e, t) {
+          if (!t) return X("원고를 먼저 확정하세요.");
+          let r = We(v, e),
+            s = r.m;
+          if (r.legacy) {
+            let n = s.legacyConfirmed;
+            return `<p class="mut">기존 앱에서 만든 이미지 묶음입니다. 이 원고(${u(t.version)})의 최종 이미지로 쓸지 확인합니다.</p><div class="card"><div class="row"><b>기존 이미지 ${s.legacyImages}장</b>${n ? $("확인됨", "done") : $("확인 필요")}</div><div class="row" style="margin:8px 0;align-items:flex-start">${e.images.map((i, a) => `<div class="cand"><div class="sw" style="background:${Yt[a % 5]}">${a + 1}</div><a class="mut note" href="${u(i.url)}" target="_blank" rel="noopener">Drive 원본</a></div>`).join("")}</div>${n ? '<button onclick="legacyUndo()">확인 해제</button>' : '<button class="p" onclick="legacyOk()">기존 이미지 묶음 확인</button>'}</div><p class="mut">데모 미리보기에서는 실제 사진 대신 색 블록을 보여줍니다.</p>`;
+          }
+          if (!s.root)
+            return e.format === "Reel" && !Se(v, e, t)
+              ? X("확정 원고의 스토리보드가 필요합니다.")
+              : `<div class="card"><p>${e.format === "Reel" ? "스토리보드의 컷마다" : e.format === "Carousel" ? "원고의 장(빈 줄로 구분)마다" : "이미지 한 장에 대해"} 제작 슬롯을 만듭니다. (데모: 실제 생성 없음)</p><input type="text" id="df" value="${u(e.drive || (C ? "" : Yr))}" placeholder="Drive 저장 폴더 링크 (https://drive.google.com/drive/folders/…)" aria-label="Drive 저장 폴더"><button class="p" onclick="reqImages()">이미지 제작 요청 만들기</button></div>`;
+          let o = s.root.id;
+          return (
+            '<p class="mut">원본과 모든 수정본은 보존됩니다. 후보가 하나뿐이면 기본으로 사용되고, 수정본이 생기면 직접 다시 골라야 합니다. ‘이미지 전체 확정’은 항상 직접 누릅니다.</p>' +
+            s.slots
+              .map((n) => {
+                let i = n.candidates || [],
+                  a = n.selected,
+                  c = !!s.root.imageSelections?.[n.id] && !!a,
+                  d = !!s.root.reviewedAt && !s.pending && !s.needsSelection,
+                  l = s.family.find((I) => I.parentId && I.slots.some((m) => m.id === n.id && !m.asset)),
+                  p = !i.length && !l,
+                  h = (I) =>
+                    I.request.id === o ? "원본" : "수정 " + (i.filter((m) => m.request.id !== o).indexOf(I) + 1);
+                return (
+                  `<div class="card"><div class="row"><b>${u(n.original.label || n.id)}</b><span class="mut">${u(n.id)}</span>${d ? $("확정", "done") : c ? $("선택됨") : a ? $("후보 1개 · 기본 사용") : i.length ? $("선택 필요", "bad") : ""}${l ? $("수정 진행 중", "wait") : ""}</div>
+      <div class="row" style="margin:6px 0;align-items:flex-start">${
+        i
+          .map((I, m) => {
+            let f = a && a.request.id === I.request.id;
+            return `<div class="cand"><div class="sw ${f ? "sel" : ""}" style="background:${Yt[m % 5]}">${h(I)}</div><button onclick="choose('${o}','${u(n.id)}','${I.request.id}','${u(I.slot.asset.previewKey)}')">${f ? (c ? "✔ 사용" : "기본 사용") : "선택"}</button>${I.request.note ? `<div class="mut note">${u(I.request.note)}</div>` : ""}</div>`;
+          })
+          .join("") || '<span class="mut">후보 없음</span>'
+      }</div>` +
+                  (p
+                    ? Kt(o, n.id, "데모 이미지 추가")
+                    : l
+                      ? `<div class="mut">수정 요청: ${u(l.note)}</div>` + Kt(l.id, n.id, "수정본 데모 추가")
+                      : `<details class="rv"><summary>수정 요청</summary><textarea id="rv-${u(n.id)}" placeholder="수정할 내용 (예: 빛을 더 부드럽게)" style="min-height:52px"></textarea><button onclick="revise('${o}','${u(n.id)}')">수정 요청 보내기</button></details>`) +
+                  "</div>"
+                );
+              })
+              .join("") +
+            (s.ready
+              ? `${$("확정됨", "done")} <button onclick="unconfirmImg('${o}')">확정 해제</button>`
+              : `<button class="p" onclick="confirmImg('${o}')">이미지 전체 확정</button>`)
+          );
+        }
+        function Ss(e, t) {
+          if (e.format !== "Reel") return X("릴스만 영상 단계가 있습니다.");
+          let r = t && We(v, e);
+          if (!r) return X("원고를 먼저 확정하세요.");
+          if (r.legacy)
+            return r.m.legacyConfirmed
+              ? `<p class="mut">기존 앱에서 만든 콘텐츠입니다. 장면표와 기존 프롬프트는 참고용으로만 보여줍니다.</p><details class="card"><summary>기존 장면 프롬프트 (${e.scenes.length})</summary>${e.scenes.map((n) => `<div class="pre mut">${u(n.timing)} · ${u(n.prompt || n.visual)}</div>`).join("")}</details><div class="card"><b>최종 영상 Drive 링크</b><input type="text" id="vu" value="${u(r.m.finalVideoUrl || "")}" placeholder="https://drive.google.com/file/d/…/view" aria-label="영상 Drive 링크"><button onclick="video('')">링크 기록</button></div>`
+              : X("기존 이미지 묶음을 먼저 확인해주세요.");
+          let s = Ut(v, e.id, t.version);
+          if (!s.ready) return X("이미지 전체 확정 후 사용할 수 있습니다.");
+          let o = v.productionRequests.find((n) => n.id === s.root_id);
+          return (
+            '<p class="mut">17섹션(기본 14 + AUDIO·END FRAME·TIMING)을 엔진이 검증합니다. 스토리보드의 구도 정보가 있으면 CAMERA·FIRST FRAME·END FRAME에 미리 채워집니다. 환경음·효과음만 허용하며, 실제 영상 생성·비용 발생은 없습니다.</p>' +
+            s.scenes
+              .map(
+                (n) =>
+                  `<div class="card"><div class="row"><b>${n.scene_id}</b>${$(n.prompt_status === "current" ? "저장됨" : n.prompt_status === "stale" ? "이미지 변경됨 · 다시 저장" : "미작성", n.prompt_status === "current" ? "done" : "")}</div><textarea id="h-${n.scene_id}" style="min-height:220px" aria-label="${n.scene_id} 프롬프트">${u(n.prompt ? n.prompt.prompt : Ft(n))}</textarea><button class="p" onclick="saveH('${n.scene_id}')">검증 후 저장</button></div>`,
+              )
+              .join("") +
+            `<div class="card"><b>최종 영상 Drive 링크</b><input type="text" id="vu" value="${u(o.finalVideoUrl || "")}" placeholder="https://drive.google.com/file/d/…/view" aria-label="영상 Drive 링크"><button onclick="video('${o.id}')">링크 기록</button></div>`
+          );
+        }
+        function ws(e) {
+          let t = O(e),
+            r = (v.state.publications || []).findLast((s) => s.contentId === e.id);
+          return `<div class="card"><b>실제 게시 후 SNS 원문 URL 기록</b><p class="mut">자동 게시하지 않습니다. ${e.format === "Reel" ? "영상 링크 기록 후에만" : "이미지 확정 후에만"} 기록할 수 있습니다.</p><input type="text" id="pu" value="${u(r ? r.url : "")}" placeholder="https://www.instagram.com/p/…" aria-label="게시물 링크"><button class="p" onclick="pub()">링크 기록</button>${t.k === "done" ? "<p>✔ 게시 링크 기록됨</p>" : r ? '<p class="mut">이전에 기록한 링크가 있으나 원고나 이미지가 바뀌어 다시 기록이 필요합니다.</p>' : ""}</div>`;
+        }
+        Wr();
+      })();
+    </script>
+  </body>
+</html>

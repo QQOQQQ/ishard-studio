@@ -9,6 +9,12 @@ workers_dev = true
 # 저장소의 src/worker.js를 다시 묶지 않고 그대로 올립니다 (운영본과 동일성 유지).
 no_bundle = true
 
+# 사이트 화면(src/ui.html)은 worker.js에서 import 하는 텍스트 모듈로 함께 올립니다.
+[[rules]]
+type = "Text"
+globs = ["**/*.html"]
+fallthrough = false
+
 [vars]
 ACCESS_TEAM_DOMAIN = "dawn-resonance-d183.cloudflareaccess.com"
 ACCESS_AUD = "2976ba9cb6501ba56f225959e78ad62fad664005c77c3cc33f1186b16177d934"
