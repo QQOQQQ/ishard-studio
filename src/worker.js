@@ -3271,6 +3271,19 @@ var kt = ["2025-06-18", "2025-03-26", "2024-11-05"],
       },
     },
     {
+      name: "read_content_brief",
+      title: "기획·원고 현황 읽기",
+      annotations: { readOnlyHint: !0 },
+      description:
+        "Read one content's full planning brief before writing a script: plan (purpose, life context, trend signals and sources, reference videos, hook directions, verified product facts, forbidden claims, response hypothesis), existing script versions with their text, open revision requests and the approved version. Also lists other contents of the same product so a new draft does not repeat the same scene or opening. Does not change data.",
+      inputSchema: {
+        type: "object",
+        properties: { content_id: { type: "string" } },
+        required: ["content_id"],
+        additionalProperties: !1,
+      },
+    },
+    {
       name: "save_higgsfield_scene_prompt",
       title: "Higgsfield \uD504\uB86C\uD504\uD2B8 \uC800\uC7A5",
       annotations: { readOnlyHint: !1, destructiveHint: !1, idempotentHint: !0 },
@@ -3364,6 +3377,17 @@ var kt = ["2025-06-18", "2025-03-26", "2024-11-05"],
           content_id: { type: "string" },
           script: { type: "string", description: "Full script text, 1-20,000 chars" },
           caption: { type: "string", description: "Instagram caption, max 8,000 chars" },
+          label: {
+            type: "string",
+            description: "Optional variant label shown on the site: A, B or C",
+            enum: ["A", "B", "C"],
+          },
+          comments: {
+            type: "array",
+            description: "Optional expected viewer comments (fictional examples, not real reviews), up to 10, each max 300 chars",
+            items: { type: "string" },
+            maxItems: 10,
+          },
         },
         required: ["content_id", "script"],
         additionalProperties: !1,
@@ -3400,6 +3424,40 @@ var kt = ["2025-06-18", "2025-03-26", "2024-11-05"],
   }),
   j = (e) => ({ content: [{ type: "text", text: e }], isError: !0 }),
   Pr = (e) => (/\/file\/d\/([\w-]+)/.exec(e || "") || [])[1] || null;
+function contentBrief(e, t) {
+  let c = e.contents.find((x) => x.id === t);
+  if (!c) throw new b("콘텐츠를 찾지 못했습니다: " + t);
+  let st = ht(e, c),
+    ap = y(e, c),
+    open = (e.revisionRequests || []).filter(
+      (x) => x.contentId === c.id && !["approved", "withdrawn"].includes(k(e, x)),
+    );
+  return {
+    content_id: c.id,
+    date: c.date,
+    format: c.format,
+    product: c.product,
+    topic: c.topic,
+    stage: st.k,
+    next: st.l,
+    plan: c.plan || {},
+    approved_version: ap?.version || null,
+    versions: (c.reviews || []).map((v) => ({
+      version: v.version,
+      label: v.label || null,
+      author: v.author || null,
+      created_at: v.createdAt || null,
+      script: (v.sections || []).map((x) => x.text).join("\n"),
+      caption: v.caption || "",
+    })),
+    open_revision_requests: open.map((x) => ({ id: x.id, version: x.version, kind: x.kind, text: x.text })),
+    same_product_contents: e.contents
+      .filter((x) => x.id !== c.id && x.product === c.product)
+      .map((x) => ({ content_id: x.id, date: x.date, format: x.format, topic: x.topic })),
+    writing_rules:
+      "대본·캡션만 작성(스토리보드·카메라·컷 제외). 제품 사실은 plan.productFacts 범위 안에서 고객 상황에 필요한 것만 직접 설명하고, 상세페이지를 중계하는 말투('~로 안내되는 제품이에요')나 기능성·분류 나열은 쓰지 않는다. 효과 보장·미검증 사용감·가짜 경험·후기 창작 금지. A/B/C는 서로 다른 생활 출발점과 전개. 저장은 save_script_draft(label A/B/C)로 초안만, 확정은 사람이 사이트에서 한다.",
+  };
+}
 function zr(e, t) {
   return {
     contents: e.contents
@@ -3489,6 +3547,7 @@ function $t(e, t, u) {
 async function Gr(e, t, u, r) {
   if (u === "read_branding_workspace") return Be(zr((await I(e)).workspace, r.stage));
   if (u === "read_storyboard_context") return Be($t((await I(e)).workspace, r.content_id, r.version));
+  if (u === "read_content_brief") return Be(contentBrief((await I(e)).workspace, r.content_id));
   if (!t.scope.split(" ").includes("studio.write"))
     return j(
       "\uBCF4\uAE30 \uC804\uC6A9 \uC5F0\uACB0\uC774\uB77C \uC800\uC7A5\uD560 \uC218 \uC5C6\uC2B5\uB2C8\uB2E4.",
@@ -3520,8 +3579,13 @@ async function Gr(e, t, u, r) {
       name: "importScript",
       args: {
         id: r.content_id,
-        text: JSON.stringify({ content_id: r.content_id, script: r.script, caption: r.caption ?? "" }),
-        fileName: "Claude 초안",
+        text: JSON.stringify({
+          content_id: r.content_id,
+          script: r.script,
+          caption: r.caption ?? "",
+          ...(Array.isArray(r.comments) && r.comments.length ? { comments: r.comments } : {}),
+        }),
+        fileName: ["A", "B", "C"].includes(r.label) ? "Claude 초안 " + r.label : "Claude 초안",
       },
       actor: s,
     });

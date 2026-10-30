@@ -3163,7 +3163,13 @@
           go(e, t) {
             w = e;
             let r = e && v.contents.find((s) => s.id === e);
-            ((Re = t || (r ? M(O(r)) : null)), (se = !1), (_ = ""), (V = ""), A());
+            ((Re = t || (r ? M(O(r)) : null)),
+              // 원고가 하나도 없으면 원고 탭 대신 기획 탭부터 보여준다.
+              r && Re === "script" && !(r.reviews || []).length && (Re = "plan"),
+              (se = !1),
+              (_ = ""),
+              (V = ""),
+              A());
             try {
               window.scrollTo(0, 0);
             } catch {}

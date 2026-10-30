@@ -38,13 +38,16 @@
 | 사이트 버튼 동작 목록 | `var $e = {` |
 | 동작 실행·저장 | `async function se` |
 | OAuth(앱 등록·허용 화면·토큰) | `async function xt`, `async function _t`, `async function Ft`, `async function It` |
-| MCP 도구 목록·설명 | `Nt = [` |
+| MCP 도구 목록·설명 | `Nt = [`, 실행 `async function Gr`, 기획 읽기 `function contentBrief` |
 | 사이트 화면(HTML/CSS/JS) | `src/ui.html` (worker.js가 `import qt from "./ui.html"`로 불러옴). 오늘 할 일 `function ts`, 검토함 `function rs`, 작업표 `function os`, 기획 탭 `function vs`·`function planBrief` |
 | 요청 경로 분기 | `ds = {`, `async function Xr` |
 
 업무 규칙의 읽기 쉬운 원본(옛 ChatGPT 사이트)은 `QQOQQQ/creative-agent` 저장소의
 `feat/ishard-psychology-planning-v2-20261028` 브랜치 `branding-hosted/lib/*.mjs`에 있습니다.
 여기 코드와 대응되므로, 규칙을 이해할 때 참고하세요.
+
+## 원고 자동 작성
+원고 초안 작성 기준과 순서는 `writer/AUTO-WRITER.md`(공통 기준 `writer/BRAND-RULES.md`, 형식별 작가 `writer/ishard-*.md`)에 있습니다. 원고를 쓰는 AI는 이 문서를 따르고, 저장은 MCP `save_script_draft`(label A/B/C)로 초안만 합니다.
 
 ## 화면 확인 방법
 `scripts/fixtures/contents.json`으로 로컬 D1을 채우고 `npx wrangler dev --local --var DEV_MODE:true --var DEV_USER_EMAIL:prettybe4468@gmail.com`로 띄우면 로그인 없이 화면을 볼 수 있습니다. 화면을 바꾼 PR은 스크린샷이나 확인한 내용을 PR에 적습니다.
