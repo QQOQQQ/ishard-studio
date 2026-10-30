@@ -46,30 +46,49 @@
 4. `save_reference_week`로 이번 주 전체를 저장합니다. 사람은 레퍼런스 탭에서 초안을 보고 "이 기획으로 콘텐츠 만들기"를 누를 수 있습니다.
 5. 제품 근거 라이브러리(`read_references`의 `product_library`)에 없는 사실을 새로 확인했으면, 라이브러리 전체를 읽어 그 제품의 `facts`에 추가한 뒤 `save_product_library`로 저장합니다. 기존 항목을 지우지 않습니다.
 
-## 3. 기획서 쓰기
-### 대상
-1. **빈 일정 채우기**: 오늘부터 14일 동안 월~토 하루 1건씩 콘텐츠가 있어야 합니다. 빈 날이 있으면 `create_content`로 만들고 바로 `save_content_plan`으로 기획을 넣습니다.
-   - ID: `ISHARD-<제품번호>-<YYYYMMDD>-<R|C|I>01` (R 릴스, C 캐러셀, I 이미지). 제품번호는 상세페이지 `product_no`.
-   - 한 주 형식 비율은 대략 릴스 3 · 캐러셀 2 · 이미지 1.
-   - 같은 제품을 3일 안에 반복하지 않고, 한 주에 같은 제품은 2번까지. 오늘 신호와 맞는 제품을 우선하되, 그동안 덜 다룬 제품도 돌아가며 넣습니다.
-2. **빈 기획 채우기**: 일정은 있는데 `plan`이 비어 있는 콘텐츠.
-3. **기획 보강(하루 최대 2건)**: 4~14일 뒤 콘텐츠 중 원고가 없고, 오늘 신호와 분명히 맞는데 트렌드·레퍼런스 근거가 비어 있는 것. 기존 기획의 좋은 내용은 유지하고 근거를 더합니다.
-- 원고 초안이 이미 있는 콘텐츠, 확정·제작이 시작된 콘텐츠는 **건드리지 않습니다**(도구도 막습니다).
+## 3. 레퍼런스 기준으로 스케줄 짜기
+스케줄의 출발점은 **레퍼런스**입니다. 트렌드·키워드·고객 목소리는 레퍼런스에서 고른 형식과 주제를 아이샤드 제품에 맞추는 데 씁니다.
+모든 기획에는 실제로 분석한 레퍼런스(`referenceApplication`: url, 빌려온 점, 관찰일, 한계)가 1개 이상 있어야 하고, 없으면 서버가 저장을 거절합니다.
 
-### 기획서 형식 (`save_content_plan`의 `plan`)
-필수: `purpose`, `productFacts[{fact, source, checkedAt}]`(source는 아이샤드 공식 상세페이지 https 주소)
+### 손댈 수 있는 범위
+- 게시일이 **오늘+4일 이후이면서 2026-11-03 이후**인 콘텐츠만. (오늘~3일 뒤는 원고 작가가 쓰는 중이라 건드리지 않습니다.)
+- 원고 초안이 없고, 확정·제작이 시작되지 않은 것만(서버도 막습니다).
+- 앞으로 14일 범위만 봅니다.
+
+### 순서
+1. **슬롯 평가**: 범위 안의 콘텐츠마다 `read_content_brief`로 기획을 읽고 레퍼런스 근거를 평가합니다.
+   - 강함: 이번 주 또는 지난주 레퍼런스(`read_references`) 항목을 구체적으로 빌렸고, 그 레퍼런스가 반응 근거(조회·평소 대비 배수 등)를 가짐 → **유지**
+   - 약함: 레퍼런스 없음, 오래된(14일 넘은) 관찰 하나를 재사용, 또는 빌려온 점이 막연함 → **교체 대상**
+2. **교체할 기획 고르기** (우선순위)
+   1) 레퍼런스 탭 이번 주 `drafts` 중 아직 일정에 없는 것(사이트에서 `plan.sourceDraft`가 같은 콘텐츠가 없는 것)
+   2) 이번 주 `items`·`patterns`에서 반응이 큰 형식(평소 대비 배수가 높은 것, 얼굴·목소리 없이 만들 수 있는 `ugc: direct|adapt` 우선)을 아이샤드 제품에 맞춘 새 기획
+3. **교체 실행**: `replace_content_plan`
+   - 같은 제품·형식이면 주제와 기획만 바뀌고 콘텐츠 ID는 그대로입니다.
+   - 제품이나 형식이 바뀌면 `product_no`를 넣습니다. 기존 콘텐츠는 휴지통(복원 가능)으로 가고 같은 날짜에 새 ID가 생깁니다.
+   - 레퍼런스 탭 초안을 넣을 때는 `source_draft: "<주>/<초안 id>"`(예: `2026-W44/W44-D1`)를 넣어야 레퍼런스 탭에서 "만든 콘텐츠 열기"로 이어집니다.
+   - `reason`에 한 줄로 이유를 적습니다(예: "W44 '습관 판정형' 레퍼런스 기준 재기획").
+   - **하루 최대 3건**만 교체합니다. 첫 실행(2026-10-30·31)은 최대 6건까지.
+4. **빈 날 채우기**: 14일 안 월~토 빈 날은 `create_content` 후 `save_content_plan`(레퍼런스 필수).
+5. **스케줄 균형** (교체·생성 후 전체를 다시 봅니다)
+   - 한 주 형식: 릴스 3 · 캐러셀 2 · 이미지 1 정도
+   - 같은 제품 3일 안 반복 금지, 한 주 같은 제품 최대 2번
+   - 같은 레퍼런스 형식(예: O/X 판정형)을 한 주에 2번 넘게 쓰지 않기
+   - 주력 제품(라이브러리 `sns: 주력`)을 우선하되 확장·순환 제품도 돌아가며
+
+### 기획서 형식 (`save_content_plan` / `replace_content_plan`의 `plan`)
+필수: `purpose`, `productFacts[{fact, source, checkedAt}]`(아이샤드 공식 상세페이지 https), `referenceApplication[{id, url, observation, observedAt, reuseLimit}]`
 권장(사이트 기획 탭에 그대로 보입니다):
-- `status`: "미승인 신규 기획", `category`: "동향 적용" 또는 "상시", `trendClassification`: "trend" | "evergreen"
-- `trendReportId`: 오늘 리포트 ID, `signalIds`: 사용한 신호, `trendApplication`: 신호를 이 콘텐츠에 어떻게 썼는지와 한계
+- `status`: "미승인 신규 기획", `category`: "레퍼런스 적용", `trendClassification`: "trend" | "evergreen"
+- `trendReportId`: 오늘 리포트 ID 또는 `REFWEEK-<주>`, `signalIds`, `trendApplication`: 신호를 이 콘텐츠에 어떻게 썼는지와 한계
 - `lifeContext`: {생활상황, 고민, 감정, 기존시도, 불만, 원하는변화, 망설임, 고려이유}
 - `purchasePsychology`, `evidenceAppeal[]`
-- `hookDirection[{angle, hookId?}]` 2~3개, `flow[]`(장면/장의 흐름), 캐러셀은 `slideCount`
+- `hookDirection[{angle, hookId?}]` 2~3개 — 레퍼런스의 첫 문장 **구조**를 빌려 아이샤드 상황으로 새로 씁니다
+- `flow[]`, 캐러셀은 `slideCount`, 릴스는 `sceneHint[{sec, visual, camera, text}]`(레퍼런스의 컷 리듬 참고, 얼굴·목소리 없이 가능한 장면)
 - `sources[]`: 제품 페이지 + 트렌드 출처({url, type, checkedAt, publishedAt, period, limit})
-- `referenceApplication[{id, url, observation, observedAt, reuseLimit}]`: 빌려온 레퍼런스 구조
-- `forbiddenClaims[]`: 이 제품·주제에서 특히 조심할 표현
+- `forbiddenClaims[]`: 제품 라이브러리 `forbidden` 포함
 - `differentiator`: 같은 제품의 다른 콘텐츠와 무엇이 다른지
-- `writerInstruction`: 길이(릴스 초 수), 톤, 꼭 피할 장면 등 작가에게 줄 지시
-- `responseHypothesis`: {variable, metric, limit} — 무엇을 바꿔서 어떤 반응을 볼지
+- `writerInstruction`: 길이(릴스 초 수), 톤, 꼭 피할 장면
+- `responseHypothesis`: {variable, metric, limit}
 
 ## 4. 결과 보고
-짧게 남깁니다: 오늘 리포트 제목과 핵심 신호 3개, 새로 만든 콘텐츠(날짜·형식·제품·주제), 채우거나 보강한 기획, 조사하지 못한 항목. 확인 링크: https://ishard-studio.prettybe4468.workers.dev (기록 탭 → 조사 리포트)
+짧게 남깁니다: 오늘 리포트 제목과 핵심 신호 3개, 교체한 콘텐츠(날짜·이전 주제 → 새 주제·사용한 레퍼런스), 새로 만든 콘텐츠, 유지한 콘텐츠 수, 조사하지 못한 항목. 확인 링크: https://ishard-studio.prettybe4468.workers.dev (기록 탭 → 조사 리포트)
