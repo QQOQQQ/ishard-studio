@@ -3949,6 +3949,9 @@
               : `<div class="card brief"><b>기획 근거</b>${empty("이 콘텐츠에는 아직 기획 근거(목적·생활 장면·트렌드·레퍼런스·제품 근거)가 없습니다. 원고를 쓰기 전에 기획을 먼저 채워주세요.")}</div>`;
           return (
             `<div class="card brief"><div class="row"><b>기획 근거</b>${p.category ? $(p.category) : ""}${p.trendClassification ? $(p.trendClassification === "trend" ? "트렌드 적용" : p.trendClassification) : ""}${p.status ? `<span class="mut">${u(p.status)}</span>` : ""}</div>` +
+            (p.replacedReason
+              ? `<div class="mut">↻ ${u(p.replacedReason)}${p.replacesContentId ? " · 이전 콘텐츠 " + u(p.replacesContentId) + "(휴지통)" : ""}</div>`
+              : "") +
             (p.purpose ? `<p><b>목적</b> ${u(p.purpose)}</p>` : "") +
             sec("누구의 어떤 순간", kvList(life)) +
             sec(
