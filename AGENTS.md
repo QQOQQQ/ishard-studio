@@ -47,7 +47,7 @@
 여기 코드와 대응되므로, 규칙을 이해할 때 참고하세요.
 
 ## 원고 자동 작성
-원고 초안 작성 기준과 순서는 `writer/AUTO-WRITER.md`(공통 기준 `writer/BRAND-RULES.md`, 형식별 작가 `writer/ishard-*.md`)에 있습니다. 원고를 쓰는 AI는 이 문서를 따르고, 저장은 MCP `save_script_draft`(label A/B/C)로 초안만 합니다.
+매일 조사·기획은 `writer/AUTO-PLANNER.md`(MCP `save_research_report`, `create_content`, `save_content_plan`), 원고 초안 작성 기준과 순서는 `writer/AUTO-WRITER.md`(공통 기준 `writer/BRAND-RULES.md`, 형식별 작가 `writer/ishard-*.md`)에 있습니다. 원고를 쓰는 AI는 이 문서를 따르고, 저장은 MCP `save_script_draft`(label A/B/C)로 초안만 합니다.
 
 ## 화면 확인 방법
 `scripts/fixtures/contents.json`으로 로컬 D1을 채우고 `npx wrangler dev --local --var DEV_MODE:true --var DEV_USER_EMAIL:prettybe4468@gmail.com`로 띄우면 로그인 없이 화면을 볼 수 있습니다. 화면을 바꾼 PR은 스크린샷이나 확인한 내용을 PR에 적습니다.

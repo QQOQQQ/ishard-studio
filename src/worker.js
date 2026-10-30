@@ -2797,6 +2797,68 @@ function Tr(e, t, u, r) {
     );
   return hr(e, t, o.version, n, r);
 }
+function savePlanAction(e, t) {
+  return v(e, (u) => {
+    let id = String(t.id || "").trim(),
+      c = u.contents.find((x) => x.id === id);
+    if (!c) throw Error("콘텐츠를 찾지 못했습니다: " + id);
+    if (u.state.approvals?.[id] || u.state.approvalHolds?.[id])
+      throw Error("원고가 확정된 적 있는 콘텐츠의 기획은 이 연결로 바꿀 수 없습니다.");
+    if (
+      (c.images || []).length ||
+      (c.scenes || []).length ||
+      (u.productionRequests || []).some((x) => x.snapshot?.contentId === id)
+    )
+      throw Error("제작이 시작된 콘텐츠의 기획은 바꿀 수 없습니다.");
+    if ((c.reviews || []).length)
+      throw Error("이미 원고 초안이 있는 콘텐츠의 기획은 바꿀 수 없습니다. 사이트에서 사람이 판단해주세요.");
+    let p = t.plan;
+    if (!p || typeof p != "object" || Array.isArray(p)) throw Error("plan은 JSON 객체여야 합니다.");
+    if (JSON.stringify(p).length > 3e4) throw Error("기획은 30KB 이내로 작성해주세요.");
+    if (typeof p.purpose != "string" || !p.purpose.trim()) throw Error("plan.purpose(목적)가 필요합니다.");
+    if (
+      !Array.isArray(p.productFacts) ||
+      !p.productFacts.length ||
+      p.productFacts.some((f) => !f || typeof f.fact != "string" || !f.fact.trim() || !/^https:\/\//.test(f.source || ""))
+    )
+      throw Error("plan.productFacts에 fact와 https 출처(source)를 가진 항목이 1개 이상 필요합니다.");
+    let old = c.plan || {},
+      now = new Date().toISOString(),
+      next = structuredClone(p);
+    delete next.history;
+    old.strategyV2 && next.strategyV2 === void 0 && (next.strategyV2 = old.strategyV2);
+    next.updatedAt = now;
+    if (Object.keys(old).length) {
+      let prev = { ...old };
+      delete prev.history;
+      next.history = [...(old.history || []), { at: now, plan: prev }].slice(-3);
+    }
+    c.plan = next;
+    u.state.events.push({ at: now, message: id + " · 기획 저장" });
+    return { content_id: id, updatedAt: now };
+  });
+}
+function saveReportAction(e, t) {
+  return v(e, (u) => {
+    let title = String(t.title || "").trim(),
+      body = String(t.body || ""),
+      today = new Date(Date.now() + 324e5).toISOString().slice(0, 10),
+      date = /^\d{4}-\d{2}-\d{2}$/.test(t.date || "") ? t.date : today;
+    if (!title || title.length > 200) throw Error("제목은 1~200자로 입력해주세요.");
+    if (!body.trim() || body.length > 4e4) throw Error("본문은 1~40,000자로 입력해주세요.");
+    let links = (Array.isArray(t.links) ? t.links : [])
+        .filter((x) => typeof x == "string" && /^https:\/\//.test(x) && x.length <= 600)
+        .slice(0, 40),
+      id = String(t.id || "").trim() || "RESEARCH-" + date.replaceAll("-", "") + "-" + crypto.randomUUID().slice(0, 6);
+    if (!/^[\w-]{3,80}$/.test(id)) throw Error("리포트 ID는 영문·숫자·-·_ 3~80자로 입력해주세요.");
+    u.reports ||= [];
+    let rec = { id, kind: "research", title, date, body, links, at: new Date().toISOString() },
+      i = u.reports.findIndex((x) => x.id === id);
+    i >= 0 ? (u.reports[i] = rec) : u.reports.push(rec);
+    u.state.events.push({ at: rec.at, message: "조사 리포트 저장 · " + id });
+    return { id, date, replaced: i >= 0 };
+  });
+}
 var $e = {
   createContent: (e, t) => kr(e, t),
   importStrategy: (e, t) => rr(e, t.id, t.text),
@@ -2831,6 +2893,8 @@ var $e = {
   bulkArchive: (e, t) => Fr(e, { ids: t.ids }),
   bulkRestore: (e, t) => Ir(e, t.keys),
   updatePlan: (e, t) => __ishardUpdatePlan(e, t),
+  savePlan: (e, t) => savePlanAction(e, t),
+  saveReport: (e, t) => saveReportAction(e, t),
 };
 var b = class extends Error {
   constructor(t, u = 400, r = {}) {
@@ -3394,6 +3458,38 @@ var kt = ["2025-06-18", "2025-03-26", "2024-11-05"],
       },
     },
     {
+      name: "save_content_plan",
+      title: "기획서 저장",
+      annotations: { readOnlyHint: !1, destructiveHint: !1 },
+      description:
+        "Save the full planning brief (plan JSON) for one content that has no script draft, no approval and no production yet. Replaces that content's plan and keeps the previous 3 plans in plan.history. Required: purpose (string) and productFacts [{fact, source: https product page URL, checkedAt}]. Recommended fields as used on the site: status, category, trendReportId, signalIds, trendClassification, trendApplication, lifeContext {생활상황, 고민, 감정, 기존시도, 불만, 원하는변화, 망설임, 고려이유}, purchasePsychology, evidenceAppeal[], hookDirection [{angle, hookId}], flow[], slideCount, sources [{url, type, checkedAt, publishedAt, period, limit}], referenceApplication [{id, url, observation, observedAt, reuseLimit}], forbiddenClaims[], differentiator, writerInstruction, responseHypothesis {variable, metric, limit}. Never approves anything.",
+      inputSchema: {
+        type: "object",
+        properties: { content_id: { type: "string" }, plan: { type: "object" } },
+        required: ["content_id", "plan"],
+        additionalProperties: !1,
+      },
+    },
+    {
+      name: "save_research_report",
+      title: "조사 리포트 저장",
+      annotations: { readOnlyHint: !1, destructiveHint: !1, idempotentHint: !0 },
+      description:
+        "Save a research report (beauty SNS trends, industry news, keywords, reference brand analysis) shown on the site's 기록 tab. Use a stable id such as ISHARD-RESEARCH-YYYYMMDD so plans can point to it with plan.trendReportId; saving the same id again replaces it. body is markdown, max 40,000 chars; links are https sources. Separate observed facts from editorial hypotheses and state each source's limits.",
+      inputSchema: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+          title: { type: "string" },
+          date: { type: "string", description: "YYYY-MM-DD (KST)" },
+          body: { type: "string" },
+          links: { type: "array", items: { type: "string" }, maxItems: 40 },
+        },
+        required: ["title", "body"],
+        additionalProperties: !1,
+      },
+    },
+    {
       name: "update_content_plan",
       title: "주제·게시일 변경",
       annotations: { readOnlyHint: !1, destructiveHint: !1 },
@@ -3417,6 +3513,8 @@ var kt = ["2025-06-18", "2025-03-26", "2024-11-05"],
     "create_content",
     "save_script_draft",
     "update_content_plan",
+    "save_content_plan",
+    "save_research_report",
   ]),
   Be = (e) => ({
     content: [{ type: "text", text: typeof e == "string" ? e : JSON.stringify(e) }],
@@ -3596,6 +3694,18 @@ async function Gr(e, t, u, r) {
       approved: !1,
       next: "사이트에서 사람이 원고를 검토하고 확정합니다.",
     });
+  }
+  if (u === "save_content_plan") {
+    let o = await se(e, { name: "savePlan", args: { id: r.content_id, plan: r.plan }, actor: s });
+    return Be({ saved: !0, ...o.result, next: "원고 작성은 writer/AUTO-WRITER.md 기준으로 save_script_draft를 사용합니다." });
+  }
+  if (u === "save_research_report") {
+    let o = await se(e, {
+      name: "saveReport",
+      args: { id: r.id, title: r.title, date: r.date, body: r.body, links: r.links },
+      actor: s,
+    });
+    return Be({ saved: !0, ...o.result });
   }
   if (u === "update_content_plan") {
     if (r.date === void 0 && r.topic === void 0) return j("topic 또는 date 중 하나 이상을 입력해주세요.");

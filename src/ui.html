@@ -558,6 +558,18 @@
         padding: 6px 0;
         border-top: 1px solid var(--ln);
       }
+      .md .mdh {
+        font-weight: 700;
+        margin: 12px 0 4px;
+      }
+      .md .mdli {
+        padding-left: 12px;
+        text-indent: -10px;
+      }
+      .md .mdsp {
+        height: 6px;
+      }
+      .report a,
       .brief a {
         color: var(--ac);
       }
@@ -3600,6 +3612,24 @@
               : '<p class="mut">이 달에 예정된 콘텐츠가 없습니다.</p>')
           );
         }
+        var mdLite = (t) =>
+            String(t || "")
+              .split("\n")
+              .map((line) => {
+                let x = u(line).replace(/\*\*(.+?)\*\*/g, "<b>$1</b>"),
+                  h = /^(#{1,4})\s+(.*)$/.exec(x);
+                if (h) return `<div class="mdh">${h[2]}</div>`;
+                let li = /^\s*[-*]\s+(.*)$/.exec(x);
+                if (li) return `<div class="mdli">• ${li[1]}</div>`;
+                return x.trim() ? `<div>${x}</div>` : '<div class="mdsp"></div>';
+              })
+              .join(""),
+          researchList = () =>
+            (v.reports || [])
+              .filter((r) => r && r.title && r.body && (r.kind === "research" || /TREND|RESEARCH/.test(r.id || "")))
+              .sort((a, b) => String(b.date || b.at || "").localeCompare(String(a.date || a.at || ""))),
+          reportCard = (r, open = !1) =>
+            `<details class="card report"${open ? " open" : ""}><summary><b>${u(r.title)}</b> <span class="mut">${u(r.date || (r.at || "").slice(0, 10))} · ${u(r.id)}</span></summary><div class="md">${mdLite(r.body)}</div>${(r.links || []).length ? `<div class="mut" style="margin-top:6px">출처</div><ul>${r.links.map((l) => `<li>${linkTo(l)}</li>`).join("")}</ul>` : ""}</details>`;
         function us() {
           let e = [
               ...v.state.events.map((r) => ({ ...r, src: "" })),
@@ -3626,6 +3656,12 @@
                   });
             };
           return (
+            (() => {
+              let rs = researchList();
+              return rs.length
+                ? `<h1>조사 리포트</h1><p class="mut">매일 아침 트렌드·업계 동향·키워드·레퍼런스 조사 결과입니다. 기획서는 이 리포트를 근거로 작성됩니다.</p>${rs.slice(0, 10).map((r, i) => reportCard(r, i === 0)).join("")}`
+                : "";
+            })() +
             `<h1>제작 기록</h1><input type="text" id="lq" value="${u($e)}" placeholder="콘텐츠 ID·제품·요청번호로 찾기" aria-label="기록 검색" oninput="logq(this.value)"><p class="mut">확정·해제·이미지 선택·수정 요청·링크 기록 등 엔진이 남긴 기록입니다. 최근 200건.</p>` +
             (e
               .map(
@@ -3714,7 +3750,10 @@
             sec(
               "반영한 트렌드",
               hasTrend
-                ? `${p.trendReportId ? `<div class="mut">리포트 ${u(p.trendReportId)}${(p.signalIds || []).length ? " · 신호 " + u(p.signalIds.join(", ")) : ""}</div>` : ""}${p.trendApplication ? `<p>${u(p.trendApplication)}</p>` : ""}${trendSrcs
+                ? `${p.trendReportId ? `<div class="mut">리포트 ${u(p.trendReportId)}${(p.signalIds || []).length ? " · 신호 " + u(p.signalIds.join(", ")) : ""}</div>` : ""}${(() => {
+                    let rr = (v.reports || []).find((x) => x && x.id === p.trendReportId && x.body);
+                    return rr ? reportCard(rr) : "";
+                  })()}${p.trendApplication ? `<p>${u(p.trendApplication)}</p>` : ""}${trendSrcs
                     .map(
                       (x) =>
                         `<div class="src">${linkTo(x.url, x.type)}${x.publishedAt ? ` <span class="mut">발행 ${u(x.publishedAt)}</span>` : ""}${x.period ? ` <span class="mut">기간 ${u(x.period)}</span>` : ""}${x.limit ? `<div class="mut">한계: ${u(x.limit)}</div>` : ""}</div>`,
