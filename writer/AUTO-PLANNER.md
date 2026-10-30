@@ -36,6 +36,16 @@
 5. 기획 반영 제안 — 어떤 콘텐츠에 어떤 신호를 쓰는지
 `links`에 사용한 출처 URL을 모두 넣습니다.
 
+### 레퍼런스 탭 갱신
+사이트 **레퍼런스** 탭은 주 단위(ISO 주, 예: `2026-W45`)로 보입니다.
+1. `read_references`로 이번 주 데이터를 읽습니다(없으면 새로 시작, 월요일이면 새 주).
+2. 오늘 분석한 콘텐츠를 `items`에 **추가**하고(같은 url은 갱신), `patterns`·`headline`·`typeShares`·`sources`를 이번 주 전체 기준으로 다시 씁니다. 지난 날의 항목을 지우지 않습니다.
+   - item: `{handle, kind: fixed|outlier, format, url, views, ratio, postedAt, hook, type, flow, why, apply, ugc: direct|adapt|hard, ugcNote}`
+   - `type`은 구매심리 유형: failure(실패 회피) / statusquo(현재 제품 유지) / tradeoff(조건 충돌) / burden(관리 부담) / proof(근거 확인) / confusion(정보 혼란)
+3. 아이샤드에 바로 쓸 만한 것은 `drafts`에 기획 초안으로 넣습니다(하루 0~2개, 주 최대 6개): `{id: "W45-D1", title, product, format, hook, why, suggestedDate, facts[{id, fact, source}], inspiredBy[url], needsFact, scenes[{sec, visual, camera, text}], strategyV2}`. facts는 제품 근거 라이브러리 또는 그날 확인한 공식 상세페이지에서만 가져옵니다.
+4. `save_reference_week`로 이번 주 전체를 저장합니다. 사람은 레퍼런스 탭에서 초안을 보고 "이 기획으로 콘텐츠 만들기"를 누를 수 있습니다.
+5. 제품 근거 라이브러리(`read_references`의 `product_library`)에 없는 사실을 새로 확인했으면, 라이브러리 전체를 읽어 그 제품의 `facts`에 추가한 뒤 `save_product_library`로 저장합니다. 기존 항목을 지우지 않습니다.
+
 ## 3. 기획서 쓰기
 ### 대상
 1. **빈 일정 채우기**: 오늘부터 14일 동안 월~토 하루 1건씩 콘텐츠가 있어야 합니다. 빈 날이 있으면 `create_content`로 만들고 바로 `save_content_plan`으로 기획을 넣습니다.

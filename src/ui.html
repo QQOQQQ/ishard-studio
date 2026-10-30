@@ -558,6 +558,74 @@
         padding: 6px 0;
         border-top: 1px solid var(--ln);
       }
+      .rfs {
+        display: grid;
+        gap: 6px;
+        margin: 6px 0;
+      }
+      .rfr {
+        display: grid;
+        grid-template-columns: 7.5em 1fr 2em;
+        gap: 8px;
+        align-items: center;
+        font-size: 13px;
+      }
+      .rfr b {
+        text-align: right;
+        font-variant-numeric: tabular-nums;
+      }
+      .rfbar {
+        height: 6px;
+        border-radius: 3px;
+        background: var(--acs);
+      }
+      .rfbar i {
+        display: block;
+        height: 100%;
+        border-radius: 3px;
+        background: var(--ac);
+      }
+      .rfp,
+      .rfl {
+        margin: 4px 0;
+        padding-left: 20px;
+      }
+      .rfp li,
+      .rfl li {
+        margin: 4px 0;
+      }
+      .rfhook {
+        font-size: 16px;
+        font-weight: 600;
+        margin: 8px 0 0;
+        color: var(--ac);
+      }
+      .rfm {
+        margin-top: 6px;
+      }
+      .rfx {
+        margin-top: 6px;
+      }
+      .rflp {
+        padding: 8px 0;
+        border-bottom: 1px solid var(--ln);
+      }
+      .plf {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        justify-content: space-between;
+        padding: 6px 0;
+        border-bottom: 1px solid var(--ln);
+      }
+      .plf span:first-child {
+        flex: 1;
+        min-width: 0;
+      }
+      .rfd a,
+      .card .rfm a {
+        color: var(--ac);
+      }
       .md .mdh {
         font-weight: 700;
         margin: 12px 0 4px;
@@ -636,7 +704,7 @@
         }
         .bnav {
           display: grid;
-          grid-template-columns: repeat(4, 1fr);
+          grid-template-columns: repeat(5, 1fr);
           position: fixed;
           left: 0;
           right: 0;
@@ -3382,6 +3450,7 @@
         var rt = [
             ["today", "오늘"],
             ["inbox", "검토함"],
+            ["refs", "레퍼런스"],
             ["table", "작업표"],
             ["cal", "캘린더"],
             ["feed", "피드"],
@@ -3397,7 +3466,7 @@
           st = (e, t) => t + (Gt(e) ? ` <span class="n">${Gt(e)}</span>` : ""),
           Qr = () =>
             `<nav class="tabs top">${rt.map(([e, t]) => `<button class="${e === ue && !w ? "on" : ""}" onclick="view('${e}')">${st(e, t)}</button>`).join("")}</nav>`,
-          Ze = ["today", "inbox", "cal"],
+          Ze = ["today", "inbox", "refs", "cal"],
           Xr = () =>
             `<nav class="bnav">${Ze.map((e) => {
               let t = rt.find((r) => r[0] === e)[1];
@@ -3433,12 +3502,12 @@
             t +
             r +
             e +
-            (w ? ms() : { today: ts, inbox: rs, table: os, cal: as, feed: ls, log: us, trash: ps }[ue]()) +
+            (w ? ms() : { today: ts, inbox: rs, refs: refView, table: os, cal: as, feed: ls, log: us, trash: ps }[ue]()) +
             Xr()),
             C && Q?.role === "viewer" && es());
         }
         var Zr =
-          /\b(newContent|archive|restoreT|addFact|review|approve|release|askRev|answer|withdraw|reqImages|regImg|choose|confirmImg|revise|legacyOk|saveH|video|pub|bulkGo|bulkRestore|bulkCheck|impStrategy|impScript|impBoard)\(/;
+          /\b(refMake|libAdd|newContent|archive|restoreT|addFact|review|approve|release|askRev|answer|withdraw|reqImages|regImg|choose|confirmImg|revise|legacyOk|saveH|video|pub|bulkGo|bulkRestore|bulkCheck|impStrategy|impScript|impBoard)\(/;
         function es() {
           (document.querySelectorAll("#app [onclick], #app [onchange]").forEach((e) => {
             Zr.test(e.getAttribute("onclick") || e.getAttribute("onchange") || "") &&
@@ -3612,6 +3681,141 @@
               : '<p class="mut">이 달에 예정된 콘텐츠가 없습니다.</p>')
           );
         }
+        var REF_FMT = { Reel: "릴스", Carousel: "캐러셀", Image: "이미지" },
+          REF_STAGES = ["공감", "장벽", "재해석", "제품 근거", "결정"],
+          refArr = (a) => (Array.isArray(a) ? a : []),
+          refNum = (n) => {
+            n = Number(n);
+            return Number.isFinite(n)
+              ? n >= 1e4
+                ? (Math.round(n / 1e3) / 10).toString().replace(/\.0$/, "") + "만"
+                : n.toLocaleString("ko-KR")
+              : "";
+          },
+          refSel = null,
+          refWeeks = () =>
+            (v.reports || [])
+              .filter((r) => r && r.kind === "reference_week" && r.data)
+              .sort((a, b2) => String(b2.week).localeCompare(String(a.week))),
+          refProducts = () => refArr((v.reports || []).find((r) => r && r.kind === "product_library")?.data?.products),
+          refNorm = (x) =>
+            String(x || "")
+              .replace(/\s|\d+(ml|g|매)|[()]/gi, "")
+              .toLowerCase(),
+          refFindProduct = (c) => {
+            let ps = refProducts(),
+              no = (/^ISHARD-(\d+)-/.exec(c?.id || "") || [])[1],
+              hit = no && ps.find((p) => String(p.no) === no);
+            if (hit) return hit;
+            let n = refNorm(c?.product);
+            return n
+              ? ps.find((p) => refNorm(p.name) === n) ||
+                  ps.find((p) => n.includes(refNorm(p.name)) || refNorm(p.name).includes(n)) ||
+                  null
+              : null;
+          },
+          refShares = (w) => {
+            let t = w.typeShares || {},
+              tot = Object.values(t).reduce((a, n) => a + (Number(n) || 0), 0);
+            if (!tot) return "";
+            let rows = Object.keys(xe)
+              .map((k) => [k, Number(t[k]) || 0])
+              .filter((r) => r[1] > 0)
+              .sort((a, b2) => b2[1] - a[1]);
+            return `<h2>많이 쓰인 구매심리 유형</h2><div class="rfs">${rows.map(([k, n]) => `<div class="rfr"><span>${xe[k]}</span><div class="rfbar"><i style="width:${Math.round((n / tot) * 100)}%"></i></div><b>${n}</b></div>`).join("")}</div>`;
+          },
+          refDraftCard = (d, w) => {
+            let sv = d.strategyV2 || {},
+              core = sv.core || {},
+              flow = refArr(sv.flow),
+              made = v.contents.find((c) => c.plan?.sourceDraft === w.week + "/" + d.id),
+              scenes = refArr(d.scenes);
+            return `<div class="card rfd"><b>${u(d.title)}</b>
+  <div class="row" style="margin-top:4px">${REF_FMT[d.format] ? $(REF_FMT[d.format]) : ""}${xe[sv.persona?.type] ? $(xe[sv.persona.type]) : ""}<span class="mut">${u(d.product)}</span></div>
+  ${d.hook ? `<div class="rfhook">“${u(d.hook)}”</div>` : ""}
+  <dl class="kv">${core.purchaseQuestion ? `<dt>구매 질문</dt><dd>${u(core.purchaseQuestion)}</dd>` : ""}${core.barrier ? `<dt>심리 장벽</dt><dd>${u(core.barrier)}</dd>` : ""}${core.answer ? `<dt>답</dt><dd>${u(core.answer)}</dd>` : ""}${d.why ? `<dt>왜 지금</dt><dd>${u(d.why)}</dd>` : ""}</dl>
+  ${flow.length ? `<details class="rfx"><summary>5단계 전개</summary><ol class="rfl">${flow.map((f, i) => `<li><span class="mut">${REF_STAGES[i] || ""}</span> ${u(f.text)}</li>`).join("")}</ol></details>` : ""}
+  ${scenes.length ? `<details class="rfx" open><summary>장면 구성 ${scenes.length}컷 · ${scenes.reduce((a, x) => a + (Number(x.sec) || 0), 0)}초</summary><ol class="rfl">${scenes.map((x) => `<li>${$(x.sec + "초")} ${u(x.visual)}${x.camera ? `<div class="mut">카메라: ${u(x.camera)}</div>` : ""}${x.text ? `<div class="mut">화면 문구(편집): ${u(x.text)}</div>` : ""}</li>`).join("")}</ol></details>` : ""}
+  ${refArr(d.facts).length ? `<div class="mut rfm">사용 근거: ${refArr(d.facts).map((f) => u((f.id ? f.id + " " : "") + f.fact)).join(" · ")}</div>` : ""}
+  ${d.needsFact ? `<div class="warn rfm">확인 필요: ${u(d.needsFact)}</div>` : ""}
+  ${refArr(d.inspiredBy).length ? `<div class="mut rfm">참고: ${refArr(d.inspiredBy).map((x, i) => linkTo(x, "원본 " + (i + 1))).join(" · ")}</div>` : ""}
+  <div class="row" style="margin-top:8px">${made ? `<button onclick="go('${u(made.id)}','plan')">만든 콘텐츠 열기</button>` : `<button class="p" onclick="refMake('${u(w.week)}','${u(d.id)}')">이 기획으로 콘텐츠 만들기</button>`}</div></div>`;
+          },
+          refItemCard = (x) =>
+            `<div class="card"><div class="row"><b>@${u(x.handle)}</b>${$(x.kind === "outlier" ? "급상승" : "고정 계정", x.kind === "outlier" ? "" : "wait")}${REF_FMT[x.format] ? `<span class="mut">${REF_FMT[x.format]}</span>` : ""}</div>
+  <div class="mut">${x.views ? `조회 ${refNum(x.views)}` : ""}${x.ratio ? ` · 평소의 ${u(x.ratio)}배` : ""}${x.postedAt ? ` · ${u(String(x.postedAt).slice(5, 10).replace("-", "/"))}` : ""}</div>
+  ${x.hook ? `<div class="rfhook">“${u(x.hook)}”</div>` : ""}
+  <dl class="kv">${xe[x.type] ? `<dt>심리 유형</dt><dd>${xe[x.type]}</dd>` : ""}${x.flow ? `<dt>흐름</dt><dd>${u(x.flow)}</dd>` : ""}${x.why ? `<dt>잘 된 이유</dt><dd>${u(x.why)}</dd>` : ""}${x.apply ? `<dt>아이샤드 적용</dt><dd>${u(x.apply)}</dd>` : ""}${x.ugc ? `<dt>UGC 영상화</dt><dd>${$({ direct: "그대로 가능", adapt: "장면 바꾸면 가능", hard: "어려움" }[x.ugc] || x.ugc, { direct: "done", hard: "bad" }[x.ugc] || "")}${x.ugcNote ? " " + u(x.ugcNote) : ""}</dd>` : ""}</dl>
+  ${safeUrl(x.url) ? `<div class="rfm">${linkTo(x.url, "원본 보기 ↗")}</div>` : ""}</div>`,
+          refLibList = () => {
+            let ps = refProducts();
+            if (!ps.length) return "";
+            let groups = [...new Set(ps.map((p) => p.sns || "기타"))];
+            return `<details class="card rflib"><summary><b>제품 근거 라이브러리</b> <span class="mut">${ps.filter((p) => p.usable).length}/${ps.length}개 사용 가능</span></summary><p class="mut">기획과 원고는 이 목록의 사실만 근거로 씁니다. 출처: ${u(ps[0]?.origin || "아이샤드 공식몰")}</p>${groups
+              .map((g) => {
+                let gs = ps.filter((p) => (p.sns || "기타") === g);
+                return `<h2>${u(g)} ${gs.length}</h2>${gs.map((p) => `<div class="rflp"><div class="row"><b>${u(p.name)}</b>${p.usable ? "" : $(p.verified === "공식몰 확인" ? "근거 없음" : p.verified || "미확인", "bad")}</div>${refArr(p.facts).map((f) => `<div class="mut">· ${u(f.fact)}</div>`).join("")}${p.forbidden ? `<div class="warn">금지: ${u(p.forbidden)}</div>` : ""}</div>`).join("")}`;
+              })
+              .join("")}</details>`;
+          },
+          refView = () => {
+            let ws = refWeeks(),
+              h = '<h1>레퍼런스</h1>';
+            if (!ws.length)
+              return (
+                h +
+                '<div class="card"><b>아직 분석이 없어요</b><p class="mut">매일 아침 조사 작업이 참고 계정과 급상승 콘텐츠를 분석해 여기에 올립니다. 아이샤드 기획 초안도 함께 와요.</p></div>' +
+                refLibList()
+              );
+            let rec = ws.find((x) => x.week === refSel) || ws[0],
+              w = { ...rec.data, week: rec.week };
+            ws.length > 1 &&
+              (h += `<div class="tabs">${ws.map((x) => `<button class="${x.week === rec.week ? "on" : ""}" onclick="refPick('${u(x.week)}')">${u(x.title || x.week)}</button>`).join("")}</div>`);
+            h += `<div class="card"><b>${u(w.period || w.week)} 요약</b>${w.headline ? `<p>${u(w.headline)}</p>` : ""}<div class="mut">고정 계정 ${refArr(w.sources?.accounts).length}곳 · 급상승 ${Number(w.sources?.outliers) || 0}개 분석${w.generatedAt ? ` · ${u(new Date(w.generatedAt).toLocaleDateString("ko-KR", { month: "numeric", day: "numeric", timeZone: "Asia/Seoul" }))} 작성` : ""}</div>${refShares(w)}${refArr(w.patterns).length ? `<h2>이번 주 패턴</h2><ul class="rfp">${refArr(w.patterns).map((x) => `<li>${u(x)}</li>`).join("")}</ul>` : ""}</div>`;
+            let ds = refArr(w.drafts);
+            ds.length &&
+              (h +=
+                `<h2>아이샤드 기획 초안 ${ds.length}</h2>` +
+                ds.map((d) => refDraftCard(d, w)).join("") +
+                '<p class="mut">초안은 공식 근거 안에서만 썼어요. 콘텐츠로 만든 뒤 기획 탭에서 확인하고, 장면 구성은 스토리보드 단계에서 참고하세요.</p>');
+            let it = refArr(w.items);
+            it.length && (h += `<h2>분석한 콘텐츠 ${it.length}</h2>` + it.map(refItemCard).join(""));
+            return h + refLibList();
+          },
+          refProductCard = (c) => {
+            let ps = refProducts();
+            if (!ps.length) return "";
+            let p = refFindProduct(c);
+            if (!p)
+              return `<div class="card"><b>제품 근거 라이브러리</b><p class="mut">'${u(c.product)}'와 맞는 제품을 라이브러리에서 찾지 못했어요.</p></div>`;
+            let have = new Set(refArr(c.plan?.productFacts).map((f) => f.id || f.fact));
+            return `<div class="card"><div class="row"><b>제품 근거 라이브러리</b>${$(p.name, p.usable ? "done" : "bad")}</div>${
+              refArr(p.facts).length
+                ? `<p class="mut">공식몰에서 확인된 사실이에요. 필요한 것만 이 콘텐츠의 공식 근거로 추가하세요.</p>${refArr(p.facts)
+                    .map(
+                      (f) =>
+                        `<div class="plf"><span>${u(f.fact)}</span>${have.has(f.id) || have.has(f.fact) ? $("추가됨", "done") : `<button onclick="libAdd('${u(p.no)}','${u(f.id)}')">추가</button>`}</div>`,
+                    )
+                    .join("")}`
+                : '<p class="bad">이 제품은 아직 공식 근거가 없어요. 상세페이지 확인 전에는 효능·특징 문장을 쓰지 마세요.</p>'
+            }${p.usage ? `<div class="mut rfm">사용법: ${u(p.usage)}</div>` : ""}${p.forbidden ? `<div class="card warnbox" style="margin-top:8px"><b>금지 표현</b><div>${u(p.forbidden)}</div></div>` : ""}${safeUrl(p.url) ? `<div class="rfm">${linkTo(p.url, "공식몰 상세페이지 ↗")}</div>` : ""}</div>`;
+          };
+        Object.assign(window, {
+          refPick(x) {
+            ((refSel = x), A());
+          },
+          refMake(week, draftId) {
+            b("createFromRefDraft", { week, draftId }, "레퍼런스 초안으로 콘텐츠를 만들었어요. 기획 탭에서 확인하세요.", (r) => {
+              r?.content_id && go(r.content_id, "plan");
+            });
+          },
+          libAdd(no, fid) {
+            let c = oe(),
+              p = refProducts().find((x) => String(x.no) === String(no)),
+              f = refArr(p?.facts).find((x) => x.id === fid);
+            c && f && b("addFact", { id: c.id, fact: { id: f.id, fact: f.fact, source: f.source } }, "공식 근거를 추가했어요.");
+          },
+        });
         var mdLite = (t) =>
             String(t || "")
               .split("\n")
@@ -3779,6 +3983,10 @@
                 : "",
             ) +
             (p.formatDirection ? `<p class="mut">형식 지시: ${u(p.formatDirection)}</p>` : "") +
+            (p.needsFact ? `<div class="warn">확인 필요: ${u(p.needsFact)}</div>` : "") +
+            (Array.isArray(p.sceneHint) && p.sceneHint.length
+              ? `<details><summary>레퍼런스 장면 구성 ${p.sceneHint.length}컷</summary><ol>${p.sceneHint.map((x) => `<li>${u(x.sec)}초 · ${u(x.visual)}${x.camera ? ` <span class="mut">(${u(x.camera)})</span>` : ""}</li>`).join("")}</ol></details>`
+              : "") +
             sec(
               "제품 근거",
               facts.length
@@ -3804,6 +4012,7 @@
             r = be(e);
           return (
             planBrief(e) +
+            refProductCard(e) +
             `<div class="card"><b>구매심리 기획 V2</b> ${t ? $(xe[t.persona.type]) + $(t.persona.evidenceStatus === "customer_data" ? "고객 데이터 근거" : "가설") : ""}${r.legacy ? '<p class="mut">구형 기획 — 변환·차단하지 않습니다.</p>' : `<p>점수 ${r.score}/100 · 원고 전달 ${r.ready ? "<b>가능</b>" : '<b class="bad">잠김</b>'}</p>${r.reasons.map((s) => `<div class="bad">• ${u(s)}</div>`).join("")}`}${t ? `<dl class="kv"><dt>구매 질문</dt><dd>${u(t.core.purchaseQuestion)}</dd><dt>심리 장벽</dt><dd>${u(t.core.barrier)}</dd><dt>지금 쓰는 대안</dt><dd>${u(t.persona.currentAlternative)}</dd><dt>포기 못 하는 조건</dt><dd>${u(t.persona.preserve)}</dd><dt>ISHARD 선택 이유</dt><dd>${u(t.fit.selectionReason)}</dd></dl>` : ""}</div>
   <div class="card"><b>기획 JSON 가져오기</b> <span class="mut">(저장만 · 사람 확인은 항상 해제 상태)</span><br><input type="file" accept=".json" aria-label="기획 JSON 파일" onchange="impStrategy(this)"></div>` +
             (t
