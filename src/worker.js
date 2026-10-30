@@ -3079,7 +3079,25 @@ var $e = {
   answerRevision: (e, t) => _r(e, t.requestId, t.text, t.summary),
   withdrawScriptRevision: (e, t) => Sr(e, t.requestId),
   saveStoryboard: (e, t) => dr(e, t.id, t.text),
-  requestImages: (e, t) => lr(e, t.id, t.folder),
+  requestImages: (e, t) => {
+    let c = e.contents.find((x) => x.id === t.id),
+      f = String(t.folder || "").trim() || c?.drive || "";
+    return lr(e, t.id, f);
+  },
+  setDrive: (e, t) =>
+    v(e, (u) => {
+      let id = String(t.id || "").trim(),
+        c = u.contents.find((x) => x.id === id);
+      if (!c) throw Error("콘텐츠를 찾지 못했습니다: " + id);
+      let url = String(t.url || "").trim().replace(/\?.*$/, "");
+      if (!$(url, !0)) throw Error("Drive 폴더 링크는 https://drive.google.com/drive/folders/… 형식이어야 합니다.");
+      if ((u.productionRequests || []).some((x) => x.snapshot?.contentId === id))
+        throw Error("이미지 제작 요청이 이미 있는 콘텐츠의 Drive 폴더는 바꿀 수 없습니다.");
+      if (c.drive && c.drive !== url && !t.override) return { content_id: id, drive: c.drive, unchanged: !0 };
+      c.drive = url;
+      u.state.events.push({ at: new Date().toISOString(), message: id + " · Drive 폴더 연결" });
+      return { content_id: id, drive: url, unchanged: !1 };
+    }),
   registerImage: (e, t) => $r(e, t.requestId, t.slotId, t.url, t.fileName),
   pick: (e, t) => mr(e, t.rootId, t.slotId, t.candidateId, t.previewKey),
   confirmImages: (e, t) => vr(e, t.rootId),
@@ -3678,6 +3696,19 @@ var kt = ["2025-06-18", "2025-03-26", "2024-11-05"],
       },
     },
     {
+      name: "set_content_drive_folder",
+      title: "Drive 폴더 연결",
+      annotations: { readOnlyHint: !1, destructiveHint: !1, idempotentHint: !0 },
+      description:
+        "Link a Google Drive folder (https://drive.google.com/drive/folders/<id>) to one content so the site's image production request is pre-filled. Create the folder first with a Google Drive connector under ISHARD SNS/Reels (Reel) or ISHARD SNS/Carousels (Carousel, Image), named with the content ID. Does nothing if a different folder is already linked unless override is true; refused once an image production request exists.",
+      inputSchema: {
+        type: "object",
+        properties: { content_id: { type: "string" }, folder_url: { type: "string" }, override: { type: "boolean" } },
+        required: ["content_id", "folder_url"],
+        additionalProperties: !1,
+      },
+    },
+    {
       name: "replace_content_plan",
       title: "레퍼런스 기준으로 콘텐츠 교체",
       annotations: { readOnlyHint: !1, destructiveHint: !1 },
@@ -3783,6 +3814,7 @@ var kt = ["2025-06-18", "2025-03-26", "2024-11-05"],
     "save_content_plan",
     "save_research_report",
     "replace_content_plan",
+    "set_content_drive_folder",
     "save_reference_week",
     "save_product_library",
   ]),
@@ -3809,6 +3841,7 @@ function contentBrief(e, t) {
     stage: st.k,
     next: st.l,
     plan: c.plan || {},
+    drive_folder: c.drive || null,
     approved_version: ap?.version || null,
     versions: (c.reviews || []).map((v) => ({
       version: v.version,
@@ -3850,6 +3883,7 @@ function zr(e, t) {
           needs_person: r.lane === "action",
           approved_version: s?.version || null,
           approved_label: s ? pe(u, s.version) : null,
+          drive_folder: u.drive || null,
         };
       })
       .filter((u) => !t || u.stage === t),
@@ -3987,6 +4021,14 @@ async function Gr(e, t, u, r) {
   if (u === "save_content_plan") {
     let o = await se(e, { name: "savePlan", args: { id: r.content_id, plan: r.plan, requireRef: !0 }, actor: s });
     return Be({ saved: !0, ...o.result, next: "원고 작성은 writer/AUTO-WRITER.md 기준으로 save_script_draft를 사용합니다." });
+  }
+  if (u === "set_content_drive_folder") {
+    let o = await se(e, {
+      name: "setDrive",
+      args: { id: r.content_id, url: r.folder_url, override: r.override === !0 },
+      actor: s,
+    });
+    return Be({ saved: !0, ...o.result });
   }
   if (u === "replace_content_plan") {
     let o = await se(e, {

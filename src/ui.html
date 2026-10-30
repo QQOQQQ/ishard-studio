@@ -3912,7 +3912,7 @@
           return (
             s.some((n) => n[0] === o) || (o = "images"),
             `<div class="hdr"><button onclick="go(null)">← 목록</button><b title="${u(e.id)}">${u(e.id)}</b><button onclick="archive()">보관</button></div>
-  <div class="mut">${u(e.format)} · ${u(e.date)} · 확정 원고 ${u(r ? z(e, r.version) : "없음")}</div><div class="next">다음: <b>${u(t.l)}</b>${t.why ? ` <span class="mut">— ${u(t.why)}</span>` : ""}</div>
+  <div class="mut">${u(e.format)} · ${u(e.date)} · 확정 원고 ${u(r ? z(e, r.version) : "없음")}${e.drive ? ` · ${linkTo(e.drive, "Drive 폴더 ↗")}` : ""}</div><div class="next">다음: <b>${u(t.l)}</b>${t.why ? ` <span class="mut">— ${u(t.why)}</span>` : ""}</div>
   <div class="tabs">${s.map(([n, i]) => `<button class="${n === o ? "on" : ""}" onclick="tab('${n}')">${i}${n === M(t) && t.k !== "done" ? " •" : ""}</button>`).join("")}</div>` +
               { plan: vs, script: gs, storyboard: bs, images: ys, video: Ss, publish: ws }[o](e, r)
           );
