@@ -1,0 +1,20 @@
+# ISHARD 콘텐츠 작업실 — Cloudflare Worker 설정
+# 이 파일의 값은 운영 중인 Worker(ishard-studio)의 설정과 같아야 합니다.
+# 바꾸면 main 브랜치에 합쳐지는 순간 운영 사이트에 그대로 반영됩니다.
+
+name = "ishard-studio"
+main = "src/worker.js"
+compatibility_date = "2026-08-01"
+workers_dev = true
+# 저장소의 src/worker.js를 다시 묶지 않고 그대로 올립니다 (운영본과 동일성 유지).
+no_bundle = true
+
+[vars]
+ACCESS_TEAM_DOMAIN = "dawn-resonance-d183.cloudflareaccess.com"
+ACCESS_AUD = "2976ba9cb6501ba56f225959e78ad62fad664005c77c3cc33f1186b16177d934"
+OWNER_EMAIL = "prettybe4468@gmail.com"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "ishard-studio"
+database_id = "f07d9370-704d-458a-8edd-4da2ad0b9d15"
