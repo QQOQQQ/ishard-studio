@@ -3,6 +3,15 @@
 매일 아침 정기 작업이 이 문서를 따라 원고 초안을 작업실에 올립니다. Claude와 ChatGPT 모두 같은 순서로 씁니다.
 사람이 하는 일은 사이트에서 초안을 비교하고 **확정**하는 것뿐입니다.
 
+## 0. Drive 폴더 미리 만들기 (원고 쓰기 전에)
+게시일이 **오늘부터 3일 뒤까지**인 콘텐츠 중 `read_branding_workspace`의 `drive_folder`가 비어 있는 것마다:
+1. Google Drive 연결로 폴더를 만듭니다. 이름은 콘텐츠 ID 그대로(예: `ISHARD-28-20261101-R01`).
+   - 릴스: `ISHARD SNS/Reels` (폴더 ID `1P741cLl2JaMqwNU0yQaGsemnkLAb_CJG`)
+   - 캐러셀·이미지: `ISHARD SNS/Carousels` (폴더 ID `1a7bwr2ERvZpY7hzEMxsb_dra6_5g2JLW`)
+   - 같은 부모 아래에 그 콘텐츠 ID로 시작하는 폴더가 이미 있으면 새로 만들지 않고 그 폴더를 씁니다.
+2. `set_content_drive_folder`로 `https://drive.google.com/drive/folders/<폴더ID>`를 연결합니다.
+이렇게 하면 사람이 원고를 확정하고 이미지 제작 요청을 누를 때 저장 폴더가 이미 채워져 있습니다.
+
 ## 1. 대상 고르기
 1. `read_branding_workspace`로 전체 목록을 읽습니다.
 2. 아래를 모두 만족하는 콘텐츠만 씁니다.
@@ -42,6 +51,7 @@
 
 ## 5. 결과 보고
 마지막에 한 번 `SendUserMessage`(또는 최종 응답)로 짧게 남깁니다.
+- Drive 폴더를 만든 콘텐츠
 - 작성한 콘텐츠: 게시일 · 콘텐츠 ID · 주제 한 줄 · "A/B/C 저장"
 - 건너뛴 콘텐츠와 이유(이미 초안 있음 / 수정 요청 중 / 기획 필요)
 - 확인 링크: https://ishard-studio.prettybe4468.workers.dev
