@@ -2797,6 +2797,199 @@ function Tr(e, t, u, r) {
     );
   return hr(e, t, o.version, n, r);
 }
+function savePlanAction(e, t) {
+  return v(e, (u) => {
+    let id = String(t.id || "").trim(),
+      c = u.contents.find((x) => x.id === id);
+    if (!c) throw Error("콘텐츠를 찾지 못했습니다: " + id);
+    if (u.state.approvals?.[id] || u.state.approvalHolds?.[id])
+      throw Error("원고가 확정된 적 있는 콘텐츠의 기획은 이 연결로 바꿀 수 없습니다.");
+    if (
+      (c.images || []).length ||
+      (c.scenes || []).length ||
+      (u.productionRequests || []).some((x) => x.snapshot?.contentId === id)
+    )
+      throw Error("제작이 시작된 콘텐츠의 기획은 바꿀 수 없습니다.");
+    if ((c.reviews || []).length)
+      throw Error("이미 원고 초안이 있는 콘텐츠의 기획은 바꿀 수 없습니다. 사이트에서 사람이 판단해주세요.");
+    let p = t.plan;
+    if (!p || typeof p != "object" || Array.isArray(p)) throw Error("plan은 JSON 객체여야 합니다.");
+    if (JSON.stringify(p).length > 3e4) throw Error("기획은 30KB 이내로 작성해주세요.");
+    if (typeof p.purpose != "string" || !p.purpose.trim()) throw Error("plan.purpose(목적)가 필요합니다.");
+    if (
+      !Array.isArray(p.productFacts) ||
+      !p.productFacts.length ||
+      p.productFacts.some((f) => !f || typeof f.fact != "string" || !f.fact.trim() || !/^https:\/\//.test(f.source || ""))
+    )
+      throw Error("plan.productFacts에 fact와 https 출처(source)를 가진 항목이 1개 이상 필요합니다.");
+    let old = c.plan || {},
+      now = new Date().toISOString(),
+      next = structuredClone(p);
+    delete next.history;
+    old.strategyV2 && next.strategyV2 === void 0 && (next.strategyV2 = old.strategyV2);
+    next.updatedAt = now;
+    if (Object.keys(old).length) {
+      let prev = { ...old };
+      delete prev.history;
+      next.history = [...(old.history || []), { at: now, plan: prev }].slice(-3);
+    }
+    c.plan = next;
+    u.state.events.push({ at: now, message: id + " · 기획 저장" });
+    return { content_id: id, updatedAt: now };
+  });
+}
+function saveReportAction(e, t) {
+  return v(e, (u) => {
+    let title = String(t.title || "").trim(),
+      body = String(t.body || ""),
+      today = new Date(Date.now() + 324e5).toISOString().slice(0, 10),
+      date = /^\d{4}-\d{2}-\d{2}$/.test(t.date || "") ? t.date : today;
+    if (!title || title.length > 200) throw Error("제목은 1~200자로 입력해주세요.");
+    if (!body.trim() || body.length > 4e4) throw Error("본문은 1~40,000자로 입력해주세요.");
+    let links = (Array.isArray(t.links) ? t.links : [])
+        .filter((x) => typeof x == "string" && /^https:\/\//.test(x) && x.length <= 600)
+        .slice(0, 40),
+      id = String(t.id || "").trim() || "RESEARCH-" + date.replaceAll("-", "") + "-" + crypto.randomUUID().slice(0, 6);
+    if (!/^[\w-]{3,80}$/.test(id)) throw Error("리포트 ID는 영문·숫자·-·_ 3~80자로 입력해주세요.");
+    u.reports ||= [];
+    let rec = { id, kind: "research", title, date, body, links, at: new Date().toISOString() },
+      i = u.reports.findIndex((x) => x.id === id);
+    i >= 0 ? (u.reports[i] = rec) : u.reports.push(rec);
+    u.state.events.push({ at: rec.at, message: "조사 리포트 저장 · " + id });
+    return { id, date, replaced: i >= 0 };
+  });
+}
+var refNorm = (x) =>
+    String(x || "")
+      .replace(/\s|\d+(ml|g|매)|[()]/gi, "")
+      .toLowerCase(),
+  refLib = (u) => (u.reports || []).find((x) => x && x.kind === "product_library"),
+  refFindProduct = (u, c) => {
+    let ps = refLib(u)?.data?.products || [],
+      no = (/^ISHARD-(\d+)-/.exec(c?.id || "") || [])[1];
+    if (no) {
+      let hit = ps.find((p) => String(p.no) === no);
+      if (hit) return hit;
+    }
+    let n = refNorm(c?.product);
+    return n ? ps.find((p) => refNorm(p.name) === n) || ps.find((p) => n.includes(refNorm(p.name)) || refNorm(p.name).includes(n)) || null : null;
+  },
+  refUpsert = (u, rec) => {
+    u.reports ||= [];
+    let i = u.reports.findIndex((x) => x && x.id === rec.id);
+    i >= 0 ? (u.reports[i] = rec) : u.reports.push(rec);
+    return i >= 0;
+  },
+  kstDate = (days = 0) => new Date(Date.now() + 324e5 + days * 864e5).toISOString().slice(0, 10);
+function saveRefWeekAction(e, t) {
+  return v(e, (u) => {
+    let d = t.data;
+    if (!d || typeof d != "object" || Array.isArray(d)) throw Error("data는 JSON 객체여야 합니다.");
+    let week = String(t.week || d.week || "").trim();
+    if (!/^\d{4}-W\d{2}$/.test(week)) throw Error("week는 2026-W44 같은 형식이어야 합니다.");
+    if (JSON.stringify(d).length > 15e4) throw Error("주간 레퍼런스는 150KB 이내로 저장해주세요.");
+    let at = new Date().toISOString(),
+      rec = {
+        id: "REFWEEK-" + week,
+        kind: "reference_week",
+        week,
+        title: String(d.period || week).slice(0, 100),
+        date: String(d.generatedAt || at).slice(0, 10),
+        at,
+        data: { ...structuredClone(d), week },
+      },
+      replaced = refUpsert(u, rec);
+    u.state.events.push({ at, message: "주간 레퍼런스 저장 · " + week });
+    return { id: rec.id, week, replaced };
+  });
+}
+function saveProductLibAction(e, t) {
+  return v(e, (u) => {
+    let ps = t.products;
+    if (!Array.isArray(ps) || !ps.length || ps.length > 200) throw Error("products는 1~200개의 배열이어야 합니다.");
+    if (ps.some((p) => !p || typeof p.name != "string" || !p.name.trim())) throw Error("제품마다 name이 필요합니다.");
+    if (JSON.stringify(ps).length > 2e5) throw Error("제품 라이브러리는 200KB 이내로 저장해주세요.");
+    let at = new Date().toISOString(),
+      replaced = refUpsert(u, {
+        id: "PRODUCT-LIBRARY",
+        kind: "product_library",
+        title: "제품 근거 라이브러리",
+        date: at.slice(0, 10),
+        at,
+        data: { products: structuredClone(ps) },
+      });
+    u.state.events.push({ at, message: "제품 근거 라이브러리 저장 · " + ps.length + "개" });
+    return { count: ps.length, replaced };
+  });
+}
+function createFromRefDraftAction(e, t) {
+  return v(e, (u) => {
+    let rec = (u.reports || []).find((x) => x && x.kind === "reference_week" && x.week === t.week);
+    if (!rec) throw Error("주간 레퍼런스를 찾지 못했습니다.");
+    let d = (rec.data?.drafts || []).find((x) => x && x.id === t.draftId);
+    if (!d) throw Error("기획 초안을 찾지 못했습니다.");
+    let key = rec.week + "/" + d.id,
+      made = u.contents.find((c) => c.plan?.sourceDraft === key);
+    if (made) return { content_id: made.id, reused: !0 };
+    let fmt = ["Reel", "Carousel", "Image"].includes(d.format) ? d.format : "Reel",
+      date = /^\d{4}-\d{2}-\d{2}$/.test(t.date || "") ? t.date : /^\d{4}-\d{2}-\d{2}$/.test(d.suggestedDate || "") ? d.suggestedDate : kstDate(7),
+      prod = refFindProduct(u, { product: d.product }),
+      no = prod?.no ? String(prod.no) : "REF",
+      n = 1,
+      id;
+    do id = `ISHARD-${no}-${date.replaceAll("-", "")}-${fmt[0]}${String(n++).padStart(2, "0")}`;
+    while ((u.contents.some((c) => c.id === id) || (u.trash || []).some((x) => x.content?.id === id)) && n < 100);
+    let https = (x) => /^https:\/\//.test(String(x || "")),
+      now = new Date().toISOString(),
+      c = {
+        id,
+        date,
+        product: String(d.product || prod?.name || "-").slice(0, 100),
+        format: fmt,
+        topic: String(d.title || d.hook || "레퍼런스 기획").slice(0, 200),
+        plan: {
+          status: "미승인 신규 기획",
+          category: "레퍼런스 적용",
+          sourceDraft: key,
+          trendReportId: rec.id,
+          purpose: String(d.strategyV2?.core?.objective || d.title || ""),
+          hookDirection: d.hook ? [{ angle: String(d.hook) }] : [],
+          productFacts: (d.facts || [])
+            .filter((f) => f && f.fact && https(f.source))
+            .map((f) => ({ id: f.id, fact: f.fact, source: f.source, checkedAt: rec.date })),
+          referenceApplication: (d.inspiredBy || []).filter(https).map((url, i) => ({
+            id: "R" + (i + 1),
+            url,
+            observation: String(d.why || ""),
+            observedAt: rec.date,
+            reuseLimit: "구조만 참고. 다른 브랜드의 문구·효능 주장은 가져오지 않음",
+          })),
+          ...(Array.isArray(d.scenes) && d.scenes.length ? { sceneHint: structuredClone(d.scenes) } : {}),
+          ...(d.needsFact ? { needsFact: String(d.needsFact) } : {}),
+          ...(prod?.forbidden ? { forbiddenClaims: [String(prod.forbidden)] } : {}),
+          createdAt: now,
+        },
+        reviews: [],
+        originalVersion: "",
+        sourceApproval: "대기",
+        production: "미착수",
+        drive: "",
+        images: [],
+        scenes: [],
+      };
+    u.contents.push(c);
+    if (d.strategyV2 && typeof d.strategyV2 == "object")
+      try {
+        ve(u, {
+          content_id: id,
+          strategy: { ...structuredClone(d.strategyV2), quality: { ...(d.strategyV2.quality || {}), humanConfirmed: !1 } },
+        });
+      } catch {}
+    u.contents.sort((a, b2) => a.date.localeCompare(b2.date) || a.id.localeCompare(b2.id));
+    u.state.events.push({ at: now, message: id + " · 레퍼런스 초안(" + key + ")으로 콘텐츠 생성" });
+    return { content_id: id, reused: !1 };
+  });
+}
 var $e = {
   createContent: (e, t) => kr(e, t),
   importStrategy: (e, t) => rr(e, t.id, t.text),
@@ -2831,6 +3024,11 @@ var $e = {
   bulkArchive: (e, t) => Fr(e, { ids: t.ids }),
   bulkRestore: (e, t) => Ir(e, t.keys),
   updatePlan: (e, t) => __ishardUpdatePlan(e, t),
+  savePlan: (e, t) => savePlanAction(e, t),
+  saveReport: (e, t) => saveReportAction(e, t),
+  saveRefWeek: (e, t) => saveRefWeekAction(e, t),
+  saveProductLib: (e, t) => saveProductLibAction(e, t),
+  createFromRefDraft: (e, t) => createFromRefDraftAction(e, t),
 };
 var b = class extends Error {
   constructor(t, u = 400, r = {}) {
@@ -3271,6 +3469,19 @@ var kt = ["2025-06-18", "2025-03-26", "2024-11-05"],
       },
     },
     {
+      name: "read_content_brief",
+      title: "기획·원고 현황 읽기",
+      annotations: { readOnlyHint: !0 },
+      description:
+        "Read one content's full planning brief before writing a script: plan (purpose, life context, trend signals and sources, reference videos, hook directions, verified product facts, forbidden claims, response hypothesis), existing script versions with their text, open revision requests and the approved version. Also lists other contents of the same product so a new draft does not repeat the same scene or opening. Does not change data.",
+      inputSchema: {
+        type: "object",
+        properties: { content_id: { type: "string" } },
+        required: ["content_id"],
+        additionalProperties: !1,
+      },
+    },
+    {
       name: "save_higgsfield_scene_prompt",
       title: "Higgsfield \uD504\uB86C\uD504\uD2B8 \uC800\uC7A5",
       annotations: { readOnlyHint: !1, destructiveHint: !1, idempotentHint: !0 },
@@ -3364,8 +3575,89 @@ var kt = ["2025-06-18", "2025-03-26", "2024-11-05"],
           content_id: { type: "string" },
           script: { type: "string", description: "Full script text, 1-20,000 chars" },
           caption: { type: "string", description: "Instagram caption, max 8,000 chars" },
+          label: {
+            type: "string",
+            description: "Optional variant label shown on the site: A, B or C",
+            enum: ["A", "B", "C"],
+          },
+          comments: {
+            type: "array",
+            description: "Optional expected viewer comments (fictional examples, not real reviews), up to 10, each max 300 chars",
+            items: { type: "string" },
+            maxItems: 10,
+          },
         },
         required: ["content_id", "script"],
+        additionalProperties: !1,
+      },
+    },
+    {
+      name: "save_content_plan",
+      title: "기획서 저장",
+      annotations: { readOnlyHint: !1, destructiveHint: !1 },
+      description:
+        "Save the full planning brief (plan JSON) for one content that has no script draft, no approval and no production yet. Replaces that content's plan and keeps the previous 3 plans in plan.history. Required: purpose (string) and productFacts [{fact, source: https product page URL, checkedAt}]. Recommended fields as used on the site: status, category, trendReportId, signalIds, trendClassification, trendApplication, lifeContext {생활상황, 고민, 감정, 기존시도, 불만, 원하는변화, 망설임, 고려이유}, purchasePsychology, evidenceAppeal[], hookDirection [{angle, hookId}], flow[], slideCount, sources [{url, type, checkedAt, publishedAt, period, limit}], referenceApplication [{id, url, observation, observedAt, reuseLimit}], forbiddenClaims[], differentiator, writerInstruction, responseHypothesis {variable, metric, limit}. Never approves anything.",
+      inputSchema: {
+        type: "object",
+        properties: { content_id: { type: "string" }, plan: { type: "object" } },
+        required: ["content_id", "plan"],
+        additionalProperties: !1,
+      },
+    },
+    {
+      name: "save_research_report",
+      title: "조사 리포트 저장",
+      annotations: { readOnlyHint: !1, destructiveHint: !1, idempotentHint: !0 },
+      description:
+        "Save a research report (beauty SNS trends, industry news, keywords, reference brand analysis) shown on the site's 기록 tab. Use a stable id such as ISHARD-RESEARCH-YYYYMMDD so plans can point to it with plan.trendReportId; saving the same id again replaces it. body is markdown, max 40,000 chars; links are https sources. Separate observed facts from editorial hypotheses and state each source's limits.",
+      inputSchema: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+          title: { type: "string" },
+          date: { type: "string", description: "YYYY-MM-DD (KST)" },
+          body: { type: "string" },
+          links: { type: "array", items: { type: "string" }, maxItems: 40 },
+        },
+        required: ["title", "body"],
+        additionalProperties: !1,
+      },
+    },
+    {
+      name: "read_references",
+      title: "레퍼런스·제품 라이브러리 읽기",
+      annotations: { readOnlyHint: !0 },
+      description:
+        "Read the reference analysis for one ISO week (default: the latest saved week) with all items and drafts, the list of saved weeks, and the product evidence library. Use it before save_reference_week so a day's new findings are merged into the week instead of replacing it. Does not change data.",
+      inputSchema: {
+        type: "object",
+        properties: { week: { type: "string", description: "e.g. 2026-W44" } },
+        additionalProperties: !1,
+      },
+    },
+    {
+      name: "save_reference_week",
+      title: "주간 레퍼런스 저장",
+      annotations: { readOnlyHint: !1, destructiveHint: !1, idempotentHint: !0 },
+      description:
+        "Save one week of reference analysis shown on the site's 레퍼런스 tab (same week replaces). data fields: period (e.g. 10/26-11/1), headline, generatedAt (ISO), sources {accounts: [handles], outliers: number}, typeShares {failure|statusquo|tradeoff|burden|proof|confusion: count}, patterns [string], items [{handle, kind: fixed|outlier, format: Reel|Carousel|Image, url, views, ratio, postedAt, hook, type, flow, why, apply, ugc: direct|adapt|hard, ugcNote}], drafts [{id, title, product, format, hook, why, suggestedDate, facts [{id, fact, source}], inspiredBy [urls], needsFact, scenes [{sec, visual, camera, text}], strategyV2}]. Only structure is borrowed from other brands; never their copy or efficacy claims.",
+      inputSchema: {
+        type: "object",
+        properties: { week: { type: "string", description: "ISO week, e.g. 2026-W45" }, data: { type: "object" } },
+        required: ["week", "data"],
+        additionalProperties: !1,
+      },
+    },
+    {
+      name: "save_product_library",
+      title: "제품 근거 라이브러리 저장",
+      annotations: { readOnlyHint: !1, destructiveHint: !1, idempotentHint: !0 },
+      description:
+        "Replace the product evidence library used by plans and the 레퍼런스 tab. products: [{no (product_no), name, url, group, sns: 주력|확장|순환|소품, usable (bool), verified, facts [{id, fact, source https}], usage, forbidden, origin, updatedAt}]. Facts must come from the official ishard.co.kr pages.",
+      inputSchema: {
+        type: "object",
+        properties: { products: { type: "array", items: { type: "object" }, maxItems: 200 } },
+        required: ["products"],
         additionalProperties: !1,
       },
     },
@@ -3393,6 +3685,10 @@ var kt = ["2025-06-18", "2025-03-26", "2024-11-05"],
     "create_content",
     "save_script_draft",
     "update_content_plan",
+    "save_content_plan",
+    "save_research_report",
+    "save_reference_week",
+    "save_product_library",
   ]),
   Be = (e) => ({
     content: [{ type: "text", text: typeof e == "string" ? e : JSON.stringify(e) }],
@@ -3400,6 +3696,47 @@ var kt = ["2025-06-18", "2025-03-26", "2024-11-05"],
   }),
   j = (e) => ({ content: [{ type: "text", text: e }], isError: !0 }),
   Pr = (e) => (/\/file\/d\/([\w-]+)/.exec(e || "") || [])[1] || null;
+function contentBrief(e, t) {
+  let c = e.contents.find((x) => x.id === t);
+  if (!c) throw new b("콘텐츠를 찾지 못했습니다: " + t);
+  let st = ht(e, c),
+    ap = y(e, c),
+    open = (e.revisionRequests || []).filter(
+      (x) => x.contentId === c.id && !["approved", "withdrawn"].includes(k(e, x)),
+    );
+  return {
+    content_id: c.id,
+    date: c.date,
+    format: c.format,
+    product: c.product,
+    topic: c.topic,
+    stage: st.k,
+    next: st.l,
+    plan: c.plan || {},
+    approved_version: ap?.version || null,
+    versions: (c.reviews || []).map((v) => ({
+      version: v.version,
+      label: v.label || null,
+      author: v.author || null,
+      created_at: v.createdAt || null,
+      script: (v.sections || []).map((x) => x.text).join("\n"),
+      caption: v.caption || "",
+    })),
+    open_revision_requests: open.map((x) => ({ id: x.id, version: x.version, kind: x.kind, text: x.text })),
+    product_library: refFindProduct(e, c),
+    latest_reference_week: (() => {
+      let w = (e.reports || [])
+        .filter((x) => x && x.kind === "reference_week")
+        .sort((a, b2) => String(b2.week).localeCompare(String(a.week)))[0];
+      return w ? { id: w.id, week: w.week, headline: w.data?.headline || "", patterns: w.data?.patterns || [] } : null;
+    })(),
+    same_product_contents: e.contents
+      .filter((x) => x.id !== c.id && x.product === c.product)
+      .map((x) => ({ content_id: x.id, date: x.date, format: x.format, topic: x.topic })),
+    writing_rules:
+      "대본·캡션만 작성(스토리보드·카메라·컷 제외). 제품 사실은 plan.productFacts 범위 안에서 고객 상황에 필요한 것만 직접 설명하고, 상세페이지를 중계하는 말투('~로 안내되는 제품이에요')나 기능성·분류 나열은 쓰지 않는다. 효과 보장·미검증 사용감·가짜 경험·후기 창작 금지. A/B/C는 서로 다른 생활 출발점과 전개. 저장은 save_script_draft(label A/B/C)로 초안만, 확정은 사람이 사이트에서 한다.",
+  };
+}
 function zr(e, t) {
   return {
     contents: e.contents
@@ -3489,6 +3826,19 @@ function $t(e, t, u) {
 async function Gr(e, t, u, r) {
   if (u === "read_branding_workspace") return Be(zr((await I(e)).workspace, r.stage));
   if (u === "read_storyboard_context") return Be($t((await I(e)).workspace, r.content_id, r.version));
+  if (u === "read_content_brief") return Be(contentBrief((await I(e)).workspace, r.content_id));
+  if (u === "read_references") {
+    let ws = (await I(e)).workspace,
+      weeks = (ws.reports || [])
+        .filter((x) => x && x.kind === "reference_week")
+        .sort((a, b2) => String(b2.week).localeCompare(String(a.week))),
+      w = r.week ? weeks.find((x) => x.week === r.week) : weeks[0];
+    return Be({
+      weeks: weeks.map((x) => ({ week: x.week, period: x.title, saved_at: x.at })),
+      week: w ? { week: w.week, ...w.data } : null,
+      product_library: refLib(ws)?.data?.products || [],
+    });
+  }
   if (!t.scope.split(" ").includes("studio.write"))
     return j(
       "\uBCF4\uAE30 \uC804\uC6A9 \uC5F0\uACB0\uC774\uB77C \uC800\uC7A5\uD560 \uC218 \uC5C6\uC2B5\uB2C8\uB2E4.",
@@ -3520,8 +3870,13 @@ async function Gr(e, t, u, r) {
       name: "importScript",
       args: {
         id: r.content_id,
-        text: JSON.stringify({ content_id: r.content_id, script: r.script, caption: r.caption ?? "" }),
-        fileName: "Claude 초안",
+        text: JSON.stringify({
+          content_id: r.content_id,
+          script: r.script,
+          caption: r.caption ?? "",
+          ...(Array.isArray(r.comments) && r.comments.length ? { comments: r.comments } : {}),
+        }),
+        fileName: ["A", "B", "C"].includes(r.label) ? "Claude 초안 " + r.label : "Claude 초안",
       },
       actor: s,
     });
@@ -3532,6 +3887,26 @@ async function Gr(e, t, u, r) {
       approved: !1,
       next: "사이트에서 사람이 원고를 검토하고 확정합니다.",
     });
+  }
+  if (u === "save_content_plan") {
+    let o = await se(e, { name: "savePlan", args: { id: r.content_id, plan: r.plan }, actor: s });
+    return Be({ saved: !0, ...o.result, next: "원고 작성은 writer/AUTO-WRITER.md 기준으로 save_script_draft를 사용합니다." });
+  }
+  if (u === "save_research_report") {
+    let o = await se(e, {
+      name: "saveReport",
+      args: { id: r.id, title: r.title, date: r.date, body: r.body, links: r.links },
+      actor: s,
+    });
+    return Be({ saved: !0, ...o.result });
+  }
+  if (u === "save_reference_week") {
+    let o = await se(e, { name: "saveRefWeek", args: { week: r.week, data: r.data }, actor: s });
+    return Be({ saved: !0, ...o.result });
+  }
+  if (u === "save_product_library") {
+    let o = await se(e, { name: "saveProductLib", args: { products: r.products }, actor: s });
+    return Be({ saved: !0, ...o.result });
   }
   if (u === "update_content_plan") {
     if (r.date === void 0 && r.topic === void 0) return j("topic 또는 date 중 하나 이상을 입력해주세요.");
