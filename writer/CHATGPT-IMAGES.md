@@ -5,6 +5,7 @@
 ## 1. 요청 읽기
 "ISHARD 작업실" 연결의 `read_production_requests`를 호출합니다(특정 콘텐츠만이면 `content_id`).
 - `slots`: 장마다 `slot_id`(slide-1, scene-1, image-1 …), 확정 원고의 해당 문장 `source_text`, 기본 `prompt`, 완료 여부
+- `scene`: 사람이 사이트 이미지 탭에서 장마다 적은 **장면 설명**. 비어 있지 않으면 이 장면(무엇을·어떤 구도로·어떤 소품)을 가장 먼저 따르고, `visual_rules`는 그대로 지킵니다.
 - `revision_requests`: 사람이 남긴 수정 요청(`note`)과 원본 이미지(`parent_image_url`)
 - `visual_rules`: 아이샤드 비주얼 규칙(반드시 지킴)
 - `product_library`: 공식 제품 사실과 상세페이지 주소(제품 모양·색·라벨 확인용)

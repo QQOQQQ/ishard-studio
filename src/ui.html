@@ -2961,6 +2961,22 @@
             saveStoryboard: (e, t) => wr(e, t.id, t.text),
             requestImages: (e, t) => Ir(e, t.id, t.folder),
             registerImage: (e, t) => Hr(e, t.requestId, t.slotId, t.url, t.fileName),
+            saveSlotScene: (e, t) =>
+              y(e, (s) => {
+                let r = (s.productionRequests || []).find((x) => x.id === t.requestId);
+                if (!r) throw Error("이미지 제작 요청을 찾지 못했습니다.");
+                H(s, r);
+                let sl = (r.slots || []).find((x) => x.id === t.slotId);
+                if (!sl) throw Error("장을 찾지 못했습니다: " + t.slotId);
+                if (sl.asset) throw Error("이미지가 이미 등록된 장은 장면 설명을 바꿀 수 없습니다. 수정 요청을 사용해주세요.");
+                let txt = typeof t.scene == "string" ? t.scene.trim() : "";
+                if (txt.length > 3e3) throw Error("장면 설명은 3000자 이내로 적어주세요.");
+                let at = new Date().toISOString();
+                txt ? ((sl.scene = txt), (sl.sceneUpdatedAt = at)) : (delete sl.scene, delete sl.sceneUpdatedAt);
+                r.updatedAt = at;
+                r.events.push({ at, message: sl.id + " 장면 설명 " + (txt ? "저장" : "삭제") });
+                return { request_id: r.id, slot_id: sl.id, scene: txt };
+              }),
             pick: (e, t) => Ar(e, t.rootId, t.slotId, t.candidateId, t.previewKey),
             confirmImages: (e, t) => Rr(e, t.rootId),
             unconfirmImages: (e, t) => _r(e, t.rootId),
@@ -3419,6 +3435,9 @@
           legacyOk() {
             confirm("기존 이미지 묶음을 이 원고의 최종 이미지로 확인할까요? 게시하지는 않습니다.") &&
               b("confirmLegacyImages", { id: w }, "기존 이미지 확인 기록을 남겼습니다.");
+          },
+          saveScene(e, t) {
+            b("saveSlotScene", { requestId: e, slotId: t, scene: ne("sc-" + t)?.value || "" }, t + " 장면 설명을 저장했습니다.");
           },
           saveH(e) {
             b("saveHiggsScene", { id: w, sceneId: e, prompt: ne("h-" + e).value }, e + " 프롬프트 저장");
@@ -4162,7 +4181,13 @@
                   h = (I) =>
                     I.request.id === o ? "원본" : "수정 " + (i.filter((m) => m.request.id !== o).indexOf(I) + 1);
                 return (
-                  `<div class="card"><div class="row"><b>${u(n.original.label || n.id)}</b><span class="mut">${u(n.id)}</span>${d ? $("확정", "done") : c ? $("선택됨") : a ? $("후보 1개 · 기본 사용") : i.length ? $("선택 필요", "bad") : ""}${l ? $("수정 진행 중", "wait") : ""}</div>
+                  `<div class="card"><div class="row"><b>${u(n.original.label || n.id)}</b><span class="mut">${u(n.id)}</span>${d ? $("확정", "done") : c ? $("선택됨") : a ? $("후보 1개 · 기본 사용") : i.length ? $("선택 필요", "bad") : ""}${l ? $("수정 진행 중", "wait") : ""}</div>${
+        n.original?.asset
+          ? n.original.scene
+            ? `<div class="mut note">장면 설명: ${u(n.original.scene)}</div>`
+            : ""
+          : `<details class="rv"${n.original?.scene ? "" : " open"}><summary>장면 설명 (ChatGPT가 읽음)${n.original?.scene ? " · 저장됨" : ""}</summary><div class="mut note">${u(n.original?.sourceText || "")}</div><textarea id="sc-${u(n.id)}" placeholder="이 장에 담을 장면 (예: 아침 욕실, 어깨 뒤에서 거울 앞 모습, 얼굴은 안 보이게)" style="min-height:90px">${u(n.original?.scene || "")}</textarea><button onclick="saveScene('${o}','${u(n.id)}')">장면 설명 저장</button></details>`
+      }
       <div class="row" style="margin:6px 0;align-items:flex-start">${
         i
           .map((I, m) => {
