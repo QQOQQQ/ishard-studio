@@ -24,13 +24,14 @@
 
 ## 2. 쓰기 전에 읽을 것
 - `writer/BRAND-RULES.md` (공통 기준)
+- `writer/HOOK-GUIDE.md` (첫 문장 후킹 — 사용자 제공 「7days 후킹 모음집」 기준. A/B/C는 서로 다른 카테고리 틀로 시작)
 - 형식별 스킬: 릴스 `writer/ishard-brand-reel-writer.md`, 캐러셀 `writer/ishard-carousel-writer.md`, 이미지 `writer/ishard-image-caption-writer.md`
 - `read_content_brief`의 `plan`: 목적, 생활 장면(`lifeContext`/`persona`), 트렌드(`trendApplication`, 출처의 `limit`), 레퍼런스(`referenceApplication`), 후킹 방향(`hookDirection`), 흐름(`flow`), 제품 사실(`productFacts`), 금지 표현(`forbiddenClaims`), `writerInstruction`, `differentiator`
 - `same_product_contents`: 같은 제품의 다른 콘텐츠 주제. 같은 장면·같은 도입을 반복하지 않습니다.
 
 ## 3. 쓰는 기준 (원고 요청 버튼의 기준을 그대로 옮김)
 - **대본·캡션만** 씁니다. 스토리보드·카메라·컷·후편집 자막은 쓰지 않습니다.
-- 첫 문장에 강한 후킹, 본문에 실제 정보 페이오프. 광고처럼 보이지 않는 네이티브 콘텐츠.
+- 첫 문장에 강한 후킹, 본문에 실제 정보 페이오프. 첫 문장(릴스 첫 자막/대사, 캐러셀 1장, 이미지 문구, 캡션 첫 줄)은 `HOOK-GUIDE.md`의 "잘 맞음/조건부" 카테고리 틀에서 골라 기획의 `hookDirection`에 맞게 채웁니다. "쓰지 않음" 카테고리(임팩트 폭발·경험담·타이밍 압박)는 쓰지 않습니다. 광고처럼 보이지 않는 네이티브 콘텐츠.
 - **A/B/C는 서로 다른 이야기**(다른 생활 출발점과 전개). 제품 사실과 기획 목표는 같게.
 - 제품 사실·출처는 확인용 근거입니다. "미백·주름개선 기능성으로 안내되는 제품이에요"처럼 **상세페이지를 중계하거나 기능성·제품 분류를 나열하지 않습니다.** 고객 상황에 필요한 사실만 자연스럽게 직접 설명합니다.
 - 자연스럽게 고친다고 효과 보장·미검증 사용감·가짜 경험을 덧붙이지 않습니다.
