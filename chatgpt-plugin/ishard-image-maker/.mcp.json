@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "ishard-studio": {
+      "type": "http",
+      "url": "https://ishard-studio.prettybe4468.workers.dev/mcp",
+      "note": "ISHARD 작업실. OAuth로 로그인(Cloudflare Access 계정). 이미지 요청 읽기·이미지 후보 등록만 사용."
+    }
+  }
+}

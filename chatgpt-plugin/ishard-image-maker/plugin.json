@@ -1,0 +1,38 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "ishard-image-maker",
+  "version": "1.0.0",
+  "description": "ISHARD 작업실의 이미지 제작 요청을 읽고 사진을 만들어 Google Drive에 저장한 뒤 작업실에 후보로 등록하는 플러그인.",
+  "author": {
+    "name": "ISHARD"
+  },
+  "keywords": [
+    "ISHARD",
+    "image",
+    "instagram",
+    "google drive"
+  ],
+  "skills": "./skills/",
+  "mcpServers": "./.mcp.json",
+  "apps": "./.app.json",
+  "extensions": {
+    "com.openai": {
+      "interface": {
+        "displayName": "ISHARD 이미지 제작",
+        "shortDescription": "작업실 이미지 요청 → 사진 제작 → Drive 저장 → 후보 등록",
+        "longDescription": "ISHARD 작업실의 이미지 제작 요청을 읽어 장마다 9:16 사진을 만들고, 콘텐츠 Drive 폴더에 저장한 뒤 작업실에 후보로 등록합니다. 고르기·확정·게시는 사람이 사이트에서 합니다.",
+        "developerName": "ISHARD",
+        "category": "Productivity",
+        "capabilities": [
+          "Interactive",
+          "Write"
+        ],
+        "websiteURL": "https://ishard-studio.prettybe4468.workers.dev",
+        "defaultPrompt": [
+          "아이샤드 작업실 이미지 요청 처리해줘",
+          "ISHARD-28-20261030-C01 이미지 만들어서 등록해줘"
+        ]
+      }
+    }
+  }
+}

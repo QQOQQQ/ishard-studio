@@ -2,6 +2,8 @@
 
 이미지는 ChatGPT가 만듭니다. 사람이 사이트에서 **이미지 제작 요청 만들기**를 누르면 요청이 생기고, ChatGPT가 아래 순서로 처리합니다.
 
+ChatGPT 플러그인 원본: `chatgpt-plugin/ishard-image-maker/` (같은 순서를 스킬로 담음, ISHARD 작업실 MCP + Google Drive 연결). 규칙을 바꾸면 두 곳을 함께 고칩니다.
+
 ## 1. 요청 읽기
 "ISHARD 작업실" 연결의 `read_production_requests`를 호출합니다(특정 콘텐츠만이면 `content_id`).
 - `slots`: 장마다 `slot_id`(slide-1, scene-1, image-1 …), 확정 원고의 해당 문장 `source_text`, 기본 `prompt`, 완료 여부
