@@ -24,6 +24,7 @@
 
 ## 2. 쓰기 전에 읽을 것
 - `writer/HOOKS.md` (후킹 카테고리 기준과 원고 점수표) — 첫 문장은 반드시 여기 기준으로 고릅니다
+- `writer/hook-picks/*.md` — 사람이 고른 후킹 후보. 콘텐츠 ID가 있으면 A안은 ★ 후보, B·C안은 다른 후보를 우선 씁니다
 - `writer/BRAND-RULES.md` (공통 기준)
 - 형식별 스킬: 릴스 `writer/ishard-brand-reel-writer.md`, 캐러셀 `writer/ishard-carousel-writer.md`, 이미지 `writer/ishard-image-caption-writer.md`
 - `read_content_brief`의 `plan`: 목적, 생활 장면(`lifeContext`/`persona`), 트렌드(`trendApplication`, 출처의 `limit`), 레퍼런스(`referenceApplication`), 후킹 방향(`hookDirection`), 흐름(`flow`), 제품 사실(`productFacts`), 금지 표현(`forbiddenClaims`), `writerInstruction`, `differentiator`
