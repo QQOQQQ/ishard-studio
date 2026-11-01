@@ -2770,6 +2770,25 @@ function Nr(e, t, u, r) {
     } else throw Error("\uC54C \uC218 \uC5C6\uB294 \uAC80\uC218 \uB3D9\uC791\uC785\uB2C8\uB2E4.");
   });
 }
+// 장면 설명: 사람이 사이트에서 장마다 적는 촬영·생성 지시. ChatGPT가 read_production_requests로 읽는다.
+// 이미지가 등록된 장은 바꾸지 않는다(이미 만든 이미지와 설명이 어긋나지 않게).
+function saveSlotScene(e, t) {
+  return v(e, (s) => {
+    let r = (s.productionRequests || []).find((x) => x.id === t.requestId);
+    if (!r) throw Error("이미지 제작 요청을 찾지 못했습니다.");
+    N(s, r);
+    let sl = (r.slots || []).find((x) => x.id === t.slotId);
+    if (!sl) throw Error("장을 찾지 못했습니다: " + t.slotId);
+    if (sl.asset) throw Error("이미지가 이미 등록된 장은 장면 설명을 바꿀 수 없습니다. 수정 요청을 사용해주세요.");
+    let txt = typeof t.scene == "string" ? t.scene.trim() : "";
+    if (txt.length > 3e3) throw Error("장면 설명은 3000자 이내로 적어주세요.");
+    let at = new Date().toISOString();
+    txt ? ((sl.scene = txt), (sl.sceneUpdatedAt = at)) : (delete sl.scene, delete sl.sceneUpdatedAt);
+    r.updatedAt = at;
+    r.events.push({ at, message: sl.id + " 장면 설명 " + (txt ? "저장" : "삭제") });
+    return { request_id: r.id, slot_id: sl.id, scene: txt };
+  });
+}
 function $r(e, t, u, r, s = "") {
   let o = /\/file\/d\/([\w-]+)/.exec(String(r || ""));
   if (!o || !$(r))
@@ -3131,6 +3150,7 @@ var $e = {
       return { content_id: id, drive: url, unchanged: !1 };
     }),
   registerImage: (e, t) => $r(e, t.requestId, t.slotId, t.url, t.fileName),
+  saveSlotScene: (e, t) => saveSlotScene(e, t),
   pick: (e, t) => mr(e, t.rootId, t.slotId, t.candidateId, t.previewKey),
   confirmImages: (e, t) => vr(e, t.rootId),
   unconfirmImages: (e, t) => gr(e, t.rootId),
@@ -3738,7 +3758,7 @@ var kt = ["2025-06-18", "2025-03-26", "2024-11-05"],
       title: "이미지 제작 요청 읽기",
       annotations: { readOnlyHint: !0 },
       description:
-        "Read open image production requests (or all requests of one content_id): each request's approved caption, Drive folder, product evidence library entry, ISHARD visual rules, and slots (slot_id e.g. slide-1 / scene-1 / image-1, approved source_text, prompt, whether done and the registered Drive file URL), plus pending revision requests with the note and the parent image. Generate one independent 9:16 photo per slot following visual_rules and the source_text, keep the real product's shape, color and label from the official product page, no text/logo/watermark in the photo. Then save each file into drive_folder and register it with save_production_image. Does not change data.",
+        "Read open image production requests (or all requests of one content_id): each request's approved caption, Drive folder, product evidence library entry, ISHARD visual rules, and slots (slot_id e.g. slide-1 / scene-1 / image-1, approved source_text, prompt, scene, whether done and the registered Drive file URL), plus pending revision requests with the note and the parent image. scene is the person's scene description written on the site for that slot: when it is not empty, use it as the main scene direction (what to show, composition, props) and still obey visual_rules. Generate one independent 9:16 photo per slot following visual_rules, the scene and the source_text, keep the real product's shape, color and label from the official product page, no text/logo/watermark in the photo. Then save each file into drive_folder and register it with save_production_image. Does not change data.",
       inputSchema: {
         type: "object",
         properties: { content_id: { type: "string" } },
@@ -3938,6 +3958,7 @@ function productionList(e, t) {
         label: sl.label,
         source_text: sl.sourceText,
         prompt: sl.prompt || "",
+        scene: sl.scene || "",
         requires_product: !!sl.requiresProduct,
         reference_urls: sl.referenceUrls || [],
         done: !!sl.asset,
