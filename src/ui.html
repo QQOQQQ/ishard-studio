@@ -558,6 +558,14 @@
         padding: 6px 0;
         border-top: 1px solid var(--ln);
       }
+      a.sw {
+        text-decoration: none;
+      }
+      .sw .swl {
+        background: rgba(255, 255, 255, 0.85);
+        border-radius: 4px;
+        padding: 0 4px;
+      }
       .dsc {
         margin: 6px 0 8px;
       }
@@ -4159,7 +4167,8 @@
         i
           .map((I, m) => {
             let f = a && a.request.id === I.request.id;
-            return `<div class="cand"><div class="sw ${f ? "sel" : ""}" style="background:${Yt[m % 5]}">${h(I)}</div><button onclick="choose('${o}','${u(n.id)}','${I.request.id}','${u(I.slot.asset.previewKey)}')">${f ? (c ? "✔ 사용" : "기본 사용") : "선택"}</button>${I.request.note ? `<div class="mut note">${u(I.request.note)}</div>` : ""}</div>`;
+            let did = (/\/file\/d\/([\w-]+)/.exec(I.slot.asset?.driveUrl || "") || [])[1];
+            return `<div class="cand"><a class="sw ${f ? "sel" : ""}" style="background:${Yt[m % 5]}${did ? `;background-image:url(https://drive.google.com/thumbnail?id=${u(did)}&sz=w400);background-size:cover;background-position:center` : ""}" ${did ? `href="${u(I.slot.asset.driveUrl)}" target="_blank" rel="noopener"` : ""}><span class="swl">${h(I)}</span></a><button onclick="choose('${o}','${u(n.id)}','${I.request.id}','${u(I.slot.asset.previewKey)}')">${f ? (c ? "✔ 사용" : "기본 사용") : "선택"}</button>${I.request.note ? `<div class="mut note">${u(I.request.note)}</div>` : ""}</div>`;
           })
           .join("") || '<span class="mut">후보 없음</span>'
       }</div>` +

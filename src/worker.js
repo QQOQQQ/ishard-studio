@@ -3734,6 +3734,36 @@ var kt = ["2025-06-18", "2025-03-26", "2024-11-05"],
       },
     },
     {
+      name: "read_production_requests",
+      title: "이미지 제작 요청 읽기",
+      annotations: { readOnlyHint: !0 },
+      description:
+        "Read open image production requests (or all requests of one content_id): each request's approved caption, Drive folder, product evidence library entry, ISHARD visual rules, and slots (slot_id e.g. slide-1 / scene-1 / image-1, approved source_text, prompt, whether done and the registered Drive file URL), plus pending revision requests with the note and the parent image. Generate one independent 9:16 photo per slot following visual_rules and the source_text, keep the real product's shape, color and label from the official product page, no text/logo/watermark in the photo. Then save each file into drive_folder and register it with save_production_image. Does not change data.",
+      inputSchema: {
+        type: "object",
+        properties: { content_id: { type: "string" } },
+        additionalProperties: !1,
+      },
+    },
+    {
+      name: "save_production_image",
+      title: "제작 이미지 등록",
+      annotations: { readOnlyHint: !1, destructiveHint: !1, idempotentHint: !0 },
+      description:
+        "Register one generated image for one slot of an image production request (use the revision request_id for a revision). drive_file_url must be the Google Drive file link https://drive.google.com/file/d/<id>/view of the saved image. Registering only adds a candidate; a person chooses and confirms images on the site. A slot that already has an image cannot be overwritten — use a revision request instead.",
+      inputSchema: {
+        type: "object",
+        properties: {
+          request_id: { type: "string" },
+          slot_id: { type: "string" },
+          drive_file_url: { type: "string" },
+          file_name: { type: "string" },
+        },
+        required: ["request_id", "slot_id", "drive_file_url"],
+        additionalProperties: !1,
+      },
+    },
+    {
       name: "set_content_drive_folder",
       title: "Drive 폴더 연결",
       annotations: { readOnlyHint: !1, destructiveHint: !1, idempotentHint: !0 },
@@ -3853,6 +3883,7 @@ var kt = ["2025-06-18", "2025-03-26", "2024-11-05"],
     "save_research_report",
     "replace_content_plan",
     "set_content_drive_folder",
+    "save_production_image",
     "save_reference_week",
     "save_product_library",
   ]),
@@ -3862,6 +3893,62 @@ var kt = ["2025-06-18", "2025-03-26", "2024-11-05"],
   }),
   j = (e) => ({ content: [{ type: "text", text: e }], isError: !0 }),
   Pr = (e) => (/\/file\/d\/([\w-]+)/.exec(e || "") || [])[1] || null;
+function productionList(e, t) {
+  let out = [];
+  for (let r of e.productionRequests || []) {
+    if (!r || r.cancelledAt || r.parentId) continue;
+    if (t && r.snapshot?.contentId !== t) continue;
+    let st;
+    try {
+      st = Ie(e, r);
+    } catch {
+      st = "unknown";
+    }
+    if (!t && ["cancelled", "changed"].includes(st)) continue;
+    let fam;
+    try {
+      fam = O(e.productionRequests, r);
+    } catch {
+      fam = null;
+    }
+    let c = e.contents.find((x) => x.id === r.snapshot?.contentId),
+      revisions = (e.productionRequests || [])
+        .filter((x) => x && x.parentId === r.id && !x.cancelledAt)
+        .map((x) => ({
+          request_id: x.id,
+          note: x.note || "",
+          slots: (x.slots || []).map((sl) => ({ slot_id: sl.id, done: !!sl.asset, drive_file_url: sl.asset?.driveUrl || null })),
+          parent_image_url:
+            (r.slots || []).find((sl) => sl.id === x.sourceSlotId)?.asset?.driveUrl || null,
+        }));
+    out.push({
+      request_id: r.id,
+      status: st,
+      content_id: r.snapshot?.contentId,
+      date: r.snapshot?.date,
+      format: r.snapshot?.format,
+      product: r.snapshot?.product,
+      script_version: r.snapshot?.version,
+      caption: r.snapshot?.caption || "",
+      drive_folder: r.driveFolder || c?.drive || null,
+      reviewed: !!fam?.root?.reviewedAt,
+      product_library: c ? refFindProduct(e, c) : null,
+      slots: (r.slots || []).map((sl) => ({
+        slot_id: sl.id,
+        label: sl.label,
+        source_text: sl.sourceText,
+        prompt: sl.prompt || "",
+        requires_product: !!sl.requiresProduct,
+        reference_urls: sl.referenceUrls || [],
+        done: !!sl.asset,
+        drive_file_url: sl.asset?.driveUrl || null,
+      })),
+      revision_requests: revisions.filter((x) => x.slots.some((sl) => !sl.done)),
+      visual_rules: Fe,
+    });
+  }
+  return { requests: out.sort((a, b2) => String(a.date).localeCompare(String(b2.date))) };
+}
 function contentBrief(e, t) {
   let c = e.contents.find((x) => x.id === t);
   if (!c) throw new b("콘텐츠를 찾지 못했습니다: " + t);
@@ -3996,6 +4083,7 @@ async function Gr(e, t, u, r) {
   if (u === "read_branding_workspace") return Be(zr((await I(e)).workspace, r.stage));
   if (u === "read_storyboard_context") return Be($t((await I(e)).workspace, r.content_id, r.version));
   if (u === "read_content_brief") return Be(contentBrief((await I(e)).workspace, r.content_id));
+  if (u === "read_production_requests") return Be(productionList((await I(e)).workspace, r.content_id));
   if (u === "read_references") {
     let ws = (await I(e)).workspace,
       weeks = (ws.reports || [])
@@ -4074,6 +4162,18 @@ async function Gr(e, t, u, r) {
   if (u === "save_content_plan") {
     let o = await se(e, { name: "savePlan", args: { id: r.content_id, plan: r.plan, requireRef: !0 }, actor: s });
     return Be({ saved: !0, ...o.result, next: "원고 작성은 writer/AUTO-WRITER.md 기준으로 save_script_draft를 사용합니다." });
+  }
+  if (u === "save_production_image") {
+    let url = String(r.drive_file_url || "")
+      .trim()
+      .replace(/\/(edit|view)?(\?.*)?$/, "/view");
+    /\/view$/.test(url) || (url = url.replace(/\/?$/, "/view"));
+    let o = await se(e, {
+      name: "registerImage",
+      args: { requestId: r.request_id, slotId: r.slot_id, url, fileName: r.file_name || r.slot_id + ".png" },
+      actor: s,
+    });
+    return Be({ saved: !0, request_id: r.request_id, slot_id: r.slot_id, drive_file_url: url, next: "사이트 이미지 탭에서 사람이 고르고 확정합니다." });
   }
   if (u === "set_content_drive_folder") {
     let o = await se(e, {
@@ -4306,7 +4406,7 @@ async function Xr(e, t, u = fetch) {
         "Content-Type": "text/html; charset=utf-8",
         ...Y,
         "Content-Security-Policy":
-          "default-src 'self'; script-src 'unsafe-inline'; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https://drive.google.com https://lh3.googleusercontent.com; connect-src 'self'; frame-ancestors 'none'",
+          "default-src 'self'; script-src 'unsafe-inline'; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https://drive.google.com https://*.googleusercontent.com; connect-src 'self'; frame-ancestors 'none'",
       },
     });
   if (e.method === "GET" && r.pathname === "/api/me") return g({ email: o, role: n });
