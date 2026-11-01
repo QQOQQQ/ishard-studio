@@ -82,7 +82,7 @@
 - `trendReportId`: 오늘 리포트 ID 또는 `REFWEEK-<주>`, `signalIds`, `trendApplication`: 신호를 이 콘텐츠에 어떻게 썼는지와 한계
 - `lifeContext`: {생활상황, 고민, 감정, 기존시도, 불만, 원하는변화, 망설임, 고려이유}
 - `purchasePsychology`, `evidenceAppeal[]`
-- `hookDirection[{angle, hookId?}]` 2~3개 — 레퍼런스의 첫 문장 **구조**를 빌려 아이샤드 상황으로 새로 씁니다
+- `hookDirection[{angle, hookId?}]` 2~3개 — 레퍼런스의 첫 문장 **구조**를 빌려 아이샤드 상황으로 새로 씁니다. `writer/HOOKS.md` 카테고리 기준을 따르고 `hookId`에 `7days-<카테고리>-<번호>`를 적습니다
 - `flow[]`, 캐러셀은 `slideCount`, 릴스는 `sceneHint[{sec, visual, camera, text}]`(레퍼런스의 컷 리듬 참고, 얼굴·목소리 없이 가능한 장면)
 - `sources[]`: 제품 페이지 + 트렌드 출처({url, type, checkedAt, publishedAt, period, limit})
 - `forbiddenClaims[]`: 제품 라이브러리 `forbidden` 포함
