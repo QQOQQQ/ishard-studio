@@ -1743,6 +1743,30 @@ function ue(e, t, u = new Date().toISOString()) {
     s
   );
 }
+function purgeArchivedContent(workspace, args) {
+  const index = (workspace.trash || []).findIndex((item) => item.key === args.key);
+  if (index < 0) throw Error("삭제할 휴지통 항목을 찾지 못했습니다. 목록을 새로 확인해주세요.");
+  const item = workspace.trash[index];
+  const id = item.content?.id;
+  if (!id || args.confirm !== id) throw Error("완전삭제할 콘텐츠 ID를 정확히 입력해주세요.");
+  workspace.trash.splice(index, 1);
+  // Archives may share an ID with another archive or an active replacement.
+  // Only remove shared records when the last content with that ID is gone.
+  const retained = workspace.contents.some((content) => content.id === id) ||
+    workspace.trash.some((entry) => entry.content?.id === id);
+  if (!retained) {
+    for (const field of ["approvals", "approvalHolds", "finals", "finalVideos", "storyboards", "higgsfieldPrompts"])
+      if (workspace.state[field]) delete workspace.state[field][id];
+    for (const field of ["approvalHistory", "publications"])
+      if (workspace.state[field]) workspace.state[field] = workspace.state[field].filter((entry) => entry.contentId !== id);
+    workspace.state.notes = (workspace.state.notes || []).filter((entry) => entry.id !== id);
+    workspace.productionRequests = (workspace.productionRequests || []).filter((entry) => entry.snapshot?.contentId !== id);
+    workspace.revisionRequests = (workspace.revisionRequests || []).filter((entry) => entry.contentId !== id);
+  }
+  workspace.state.events.push({ at: new Date().toISOString(), message: id + " · 휴지통 항목 완전삭제 (Drive 원본 보존)" });
+  return { key: args.key, content_id: id, external_files_deleted: false };
+}
+
 function ce(e, t, u = new Date().toISOString()) {
   let r = (e.trash || []).findIndex((i) => i.key === t);
   if (r < 0)
@@ -3143,6 +3167,7 @@ var $e = {
   publish: (e, t) => Er(e, t.id, t.url),
   archive: (e, t) => br(e, t.id),
   restore: (e, t) => wr(e, t.key),
+  purgeTrash: (e, t) => v(e, (workspace) => purgeArchivedContent(workspace, t)),
   bulkArchive: (e, t) => Fr(e, { ids: t.ids }),
   bulkRestore: (e, t) => Ir(e, t.keys),
   updatePlan: (e, t) => __ishardUpdatePlan(e, t),
@@ -4542,3 +4567,4 @@ async function Zr(e, t, u, r) {
   return a.length ? g(Array.isArray(n) ? a : a[0]) : new Response(null, { status: 202, headers: Y });
 }
 export { ds as default, Xr as handle };
+
