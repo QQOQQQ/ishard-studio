@@ -23,6 +23,7 @@
    - `plan`이 비어 있음 → 기획 없이 쓰지 않음. 결과 보고에 "기획 필요"로 남김
 
 ## 2. 쓰기 전에 읽을 것
+- `writer/HOOKS.md` (후킹 카테고리 기준과 원고 점수표) — 첫 문장은 반드시 여기 기준으로 고릅니다
 - `writer/BRAND-RULES.md` (공통 기준)
 - 형식별 스킬: 릴스 `writer/ishard-brand-reel-writer.md`, 캐러셀 `writer/ishard-carousel-writer.md`, 이미지 `writer/ishard-image-caption-writer.md`
 - `read_content_brief`의 `plan`: 목적, 생활 장면(`lifeContext`/`persona`), 트렌드(`trendApplication`, 출처의 `limit`), 레퍼런스(`referenceApplication`), 후킹 방향(`hookDirection`), 흐름(`flow`), 제품 사실(`productFacts`), 금지 표현(`forbiddenClaims`), `writerInstruction`, `differentiator`
@@ -45,6 +46,7 @@
 
 ## 4. 저장
 - 콘텐츠마다 `save_script_draft`를 3번 호출합니다: `label` = `A`, `B`, `C`.
+- 각 안마다 `writer/HOOKS.md` 3장 점수표로 채점해 `score`에 넣습니다(80점 미만이면 약한 항목을 고친 뒤 다시 채점). A/B/C는 후킹 카테고리나 첫 장면이 서로 달라야 합니다.
 - `comments`에는 가상의 예상 댓글 3~4개(실제 후기처럼 쓰지 않음)를 넣을 수 있습니다.
 - 이미지 형식은 기획에 A/B/C 요구가 없으면 A 하나만 써도 됩니다.
 - 확정·승인·게시·이미지·영상 요청은 하지 않습니다(도구도 없습니다).
@@ -52,6 +54,6 @@
 ## 5. 결과 보고
 마지막에 한 번 `SendUserMessage`(또는 최종 응답)로 짧게 남깁니다.
 - Drive 폴더를 만든 콘텐츠
-- 작성한 콘텐츠: 게시일 · 콘텐츠 ID · 주제 한 줄 · "A/B/C 저장"
+- 작성한 콘텐츠: 게시일 · 콘텐츠 ID · 주제 한 줄 · A/B/C 점수
 - 건너뛴 콘텐츠와 이유(이미 초안 있음 / 수정 요청 중 / 기획 필요)
 - 확인 링크: https://ishard-studio.prettybe4468.workers.dev

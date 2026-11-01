@@ -2841,6 +2841,38 @@ function withPlanHistory(old, p, now) {
   }
   return next;
 }
+function scoreDraftAction(e, t) {
+  return v(e, (u) => {
+    let c = u.contents.find((x) => x.id === t.id),
+      d = c?.reviews.find((x) => x.version === t.version);
+    if (!d) throw Error("점수를 붙일 원고 버전을 찾지 못했습니다.");
+    let sc = t.score;
+    if (!sc || typeof sc != "object" || Array.isArray(sc)) throw Error("score는 객체여야 합니다.");
+    let items = (Array.isArray(sc.items) ? sc.items : []).slice(0, 8).map((x) => {
+      let max = Number(x?.max),
+        val = Number(x?.score);
+      if (!x || typeof x.name != "string" || !x.name.trim() || !Number.isFinite(max) || max <= 0 || max > 100 || !Number.isFinite(val) || val < 0 || val > max)
+        throw Error("score.items는 {name, score, max, reason} 형식이며 0 ≤ score ≤ max 여야 합니다.");
+      return { name: x.name.trim().slice(0, 40), score: Math.round(val), max: Math.round(max), reason: String(x.reason || "").slice(0, 300) };
+    });
+    if (!items.length) throw Error("score.items가 1개 이상 필요합니다.");
+    let total = items.reduce((a, x) => a + x.score, 0),
+      maxTotal = items.reduce((a, x) => a + x.max, 0);
+    d.score = {
+      total,
+      max: maxTotal,
+      pass: total >= Math.round(maxTotal * 0.8),
+      items,
+      hook: String(sc.hook || "").slice(0, 200),
+      hookType: String(sc.hookType || "").slice(0, 40),
+      hookRef: String(sc.hookRef || "").slice(0, 60),
+      note: String(sc.note || "").slice(0, 400),
+      by: String(sc.by || "AI 자체 평가").slice(0, 40),
+      at: new Date().toISOString(),
+    };
+    return { content_id: c.id, version: d.version, total, max: maxTotal, pass: d.score.pass };
+  });
+}
 function replaceContentAction(e, t) {
   return v(e, (u) => {
     let id = String(t.id || "").trim(),
@@ -3116,6 +3148,7 @@ var $e = {
   updatePlan: (e, t) => __ishardUpdatePlan(e, t),
   savePlan: (e, t) => savePlanAction(e, t),
   replaceContent: (e, t) => replaceContentAction(e, t),
+  scoreDraft: (e, t) => scoreDraftAction(e, t),
   saveReport: (e, t) => saveReportAction(e, t),
   saveRefWeek: (e, t) => saveRefWeekAction(e, t),
   saveProductLib: (e, t) => saveProductLibAction(e, t),
@@ -3677,6 +3710,11 @@ var kt = ["2025-06-18", "2025-03-26", "2024-11-05"],
             items: { type: "string" },
             maxItems: 10,
           },
+          score: {
+            type: "object",
+            description:
+              "Self-evaluation shown on the draft card, per writer/HOOKS.md rubric: {hook: first line, hookType: e.g. 사고 자극형, hookRef: e.g. 7days-08-22, items: [{name, score, max, reason}] (훅 멈춤력 25, 타깃 명확성 15, 정보 페이오프 20, 브랜드 안전 20, 레퍼런스 적합 10, 차별성 10), note}. Pass = 80% of max. Never claim real performance.",
+          },
         },
         required: ["content_id", "script"],
         additionalProperties: !1,
@@ -3850,6 +3888,7 @@ function contentBrief(e, t) {
       created_at: v.createdAt || null,
       script: (v.sections || []).map((x) => x.text).join("\n"),
       caption: v.caption || "",
+      score: v.score || null,
     })),
     open_revision_requests: open.map((x) => ({ id: x.id, version: x.version, kind: x.kind, text: x.text })),
     product_library: refFindProduct(e, c),
@@ -4010,10 +4049,24 @@ async function Gr(e, t, u, r) {
       },
       actor: s,
     });
+    let scoreResult = null;
+    if (r.score && o.result?.version)
+      try {
+        scoreResult = (
+          await se(e, {
+            name: "scoreDraft",
+            args: { id: r.content_id, version: o.result.version, score: r.score },
+            actor: s,
+          })
+        ).result;
+      } catch (m) {
+        scoreResult = { error: m.message };
+      }
     return Be({
       saved: !0,
       content_id: r.content_id,
       version: o.result && o.result.version,
+      score: scoreResult,
       approved: !1,
       next: "사이트에서 사람이 원고를 검토하고 확정합니다.",
     });

@@ -558,6 +558,12 @@
         padding: 6px 0;
         border-top: 1px solid var(--ln);
       }
+      .dsc {
+        margin: 6px 0 8px;
+      }
+      .dsc .rfr {
+        grid-template-columns: 8em 1fr 3em;
+      }
       .rfs {
         display: grid;
         gap: 6px;
@@ -3681,7 +3687,11 @@
               : '<p class="mut">이 달에 예정된 콘텐츠가 없습니다.</p>')
           );
         }
-        var REF_FMT = { Reel: "릴스", Carousel: "캐러셀", Image: "이미지" },
+        var draftScore = (sc) =>
+            sc
+              ? `<details class="dsc"><summary>${sc.hookType ? u(sc.hookType) + " · " : ""}점수 ${sc.total}/${sc.max} ${sc.pass ? "통과" : "보완 필요"} <span class="mut">(${u(sc.by || "AI 자체 평가")} · 실제 성과 예측 아님)</span></summary>${sc.hook ? `<div class="rfhook">“${u(sc.hook)}”</div>` : ""}${sc.hookRef ? `<div class="mut">후킹 참고: ${u(sc.hookRef)}</div>` : ""}<div class="rfs">${(sc.items || []).map((x) => `<div class="rfr"><span>${u(x.name)}</span><div class="rfbar"><i style="width:${Math.round((x.score / x.max) * 100)}%"></i></div><b>${x.score}/${x.max}</b></div>${x.reason ? `<div class="mut" style="margin:-2px 0 4px">${u(x.reason)}</div>` : ""}`).join("")}</div>${sc.note ? `<div class="mut">${u(sc.note)}</div>` : ""}</details>`
+              : "",
+          REF_FMT = { Reel: "릴스", Carousel: "캐러셀", Image: "이미지" },
           REF_STAGES = ["공감", "장벽", "재해석", "제품 근거", "결정"],
           refArr = (a) => (Array.isArray(a) ? a : []),
           refNum = (n) => {
@@ -4040,7 +4050,7 @@
             o = [...e.reviews].sort((i, a) => (t && a.version === t.version) - (t && i.version === t.version)),
             n = (i, a) => {
               let c = t && t.version === i.version;
-              return `<div class="card ver ${c ? "appr" : ""}"><div class="row"><b>${u(i.label || i.version)}</b>${c ? $("확정", "done") : ""}${i.author === "user" ? "" : $("기존")}</div>${i.label ? `<div class="mut vid">${u(i.version)}</div>` : ""}<h2>대본</h2><div class="pre">${u(ot(i))}</div><h2>캡션</h2><div class="pre">${u(i.caption || "")}</div>${i.expectedComments?.length ? `<details class="ec"><summary>예상 댓글 ${i.expectedComments.length}개 <span class="mut">(가상 시청자 반응 예시 · 실제 후기 아님)</span></summary><ul>${i.expectedComments.map((d) => `<li>${u(d)}</li>`).join("")}</ul><button onclick="cpc('${u(i.version)}')">예상 댓글 복사</button></details>` : ""}
+              return `<div class="card ver ${c ? "appr" : ""}"><div class="row"><b>${u(i.label || i.version)}</b>${c ? $("확정", "done") : ""}${i.author === "user" ? "" : $("기존")}${i.score ? $(i.score.total + "/" + i.score.max + "점", i.score.pass ? "done" : "bad") : ""}</div>${draftScore(i.score)}${i.label ? `<div class="mut vid">${u(i.version)}</div>` : ""}<h2>대본</h2><div class="pre">${u(ot(i))}</div><h2>캡션</h2><div class="pre">${u(i.caption || "")}</div>${i.expectedComments?.length ? `<details class="ec"><summary>예상 댓글 ${i.expectedComments.length}개 <span class="mut">(가상 시청자 반응 예시 · 실제 후기 아님)</span></summary><ul>${i.expectedComments.map((d) => `<li>${u(d)}</li>`).join("")}</ul><button onclick="cpc('${u(i.version)}')">예상 댓글 복사</button></details>` : ""}
     <div class="row" style="margin-top:8px">${c ? `<button onclick="release('${u(i.version)}')">확정 해제</button>` : `<button class="p" onclick="approve('${u(i.version)}')">이 원고로 확정</button>`}<button onclick="dl('${u(i.version)}')">JSON 받기</button><button onclick="cp('${u(i.version)}')">JSON 복사</button></div>
     ${a ? "" : `<details class="rv"><summary>이 버전 수정 요청</summary><textarea id="rq-${u(i.version)}" placeholder="무엇을 바꿀지 구체적으로 (예: 첫 3초 문장을 12자 이내로)"></textarea><button onclick="askRev('${u(i.version)}')">수정 요청 등록</button></details>`}</div>`;
             };
