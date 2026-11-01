@@ -2364,6 +2364,30 @@
             (() => {
               throw Error("콘텐츠를 찾지 못했습니다.");
             })();
+function purgeArchivedContent(workspace, args) {
+  const index = (workspace.trash || []).findIndex((item) => item.key === args.key);
+  if (index < 0) throw Error("삭제할 휴지통 항목을 찾지 못했습니다. 목록을 새로 확인해주세요.");
+  const item = workspace.trash[index];
+  const id = item.content?.id;
+  if (!id || args.confirm !== id) throw Error("완전삭제할 콘텐츠 ID를 정확히 입력해주세요.");
+  workspace.trash.splice(index, 1);
+  // Archives may share an ID with another archive or an active replacement.
+  // Only remove shared records when the last content with that ID is gone.
+  const retained = workspace.contents.some((content) => content.id === id) ||
+    workspace.trash.some((entry) => entry.content?.id === id);
+  if (!retained) {
+    for (const field of ["approvals", "approvalHolds", "finals", "finalVideos", "storyboards", "higgsfieldPrompts"])
+      if (workspace.state[field]) delete workspace.state[field][id];
+    for (const field of ["approvalHistory", "publications"])
+      if (workspace.state[field]) workspace.state[field] = workspace.state[field].filter((entry) => entry.contentId !== id);
+    workspace.state.notes = (workspace.state.notes || []).filter((entry) => entry.id !== id);
+    workspace.productionRequests = (workspace.productionRequests || []).filter((entry) => entry.snapshot?.contentId !== id);
+    workspace.revisionRequests = (workspace.revisionRequests || []).filter((entry) => entry.contentId !== id);
+  }
+  workspace.state.events.push({ at: new Date().toISOString(), message: id + " · 휴지통 항목 완전삭제 (Drive 원본 보존)" });
+  return { key: args.key, content_id: id, external_files_deleted: false };
+}
+
         function y(e, t) {
           let r = structuredClone(e),
             s = t(r);
@@ -2973,6 +2997,7 @@
             publish: (e, t) => Nr(e, t.id, t.url),
             archive: (e, t) => Dr(e, t.id),
             restore: (e, t) => qr(e, t.key),
+  purgeTrash: (e, t) => y(e, (workspace) => purgeArchivedContent(workspace, t)),
             bulkArchive: (e, t) => Fr(e, { ids: t.ids }),
             bulkRestore: (e, t) => jr(e, t.keys),
           },
@@ -3302,6 +3327,20 @@
           restoreT(e) {
             b("restore", { key: e }, "복원했습니다.", () => J.delete(e));
           },
+          purgeT(key) {
+            const item = (v.trash || []).find((entry) => entry.key === key);
+            if (!item) return;
+            const id = item.content.id;
+            const answer = prompt(
+              "완전삭제: " + id + "\n" + item.content.topic +
+              "\n\n이 휴지통 항목의 기획·원고·보관 기록을 삭제하며 복원할 수 없습니다. 다른 항목에서 사용하지 않는 제작 요청·이미지 연결도 삭제합니다." +
+              "\nGoogle Drive의 실제 이미지·영상 파일은 삭제하지 않습니다." +
+              "\n\n계속하려면 아래 콘텐츠 ID를 정확히 입력해주세요.\n" + id
+            );
+            if (answer === null) return;
+            if (answer.trim() !== id) { alert("콘텐츠 ID가 일치하지 않아 삭제하지 않았습니다."); return; }
+            b("purgeTrash", { key, confirm: id }, "완전삭제했습니다. Drive 원본 파일은 보존됩니다.", () => J.delete(key));
+          },
           impStrategy(e) {
             Qe(e, (t) => b("importStrategy", { id: w, text: t }, "기획을 가져왔습니다. 사람 검수가 필요합니다."));
           },
@@ -3521,7 +3560,7 @@
             C && Q?.role === "viewer" && es());
         }
         var Zr =
-          /\b(refMake|libAdd|newContent|archive|restoreT|addFact|review|approve|release|askRev|answer|withdraw|reqImages|regImg|choose|confirmImg|revise|legacyOk|saveH|video|pub|bulkGo|bulkRestore|bulkCheck|impStrategy|impScript|impBoard)\(/;
+          /\b(refMake|libAdd|newContent|archive|restoreT|purgeT|addFact|review|approve|release|askRev|answer|withdraw|reqImages|regImg|choose|confirmImg|revise|legacyOk|saveH|video|pub|bulkGo|bulkRestore|bulkCheck|impStrategy|impScript|impBoard)\(/;
         function es() {
           (document.querySelectorAll("#app [onclick], #app [onchange]").forEach((e) => {
             Zr.test(e.getAttribute("onclick") || e.getAttribute("onchange") || "") &&
@@ -3900,7 +3939,7 @@
                 e
                   .map(
                     (t) =>
-                      `<div class="card"><label class="row"><input type="checkbox" aria-label="${u(t.content.id)} 선택" ${J.has(t.key) ? "checked" : ""} onchange="ttick('${u(t.key)}',this.checked)"><b class="cid">${u(t.content.id)}</b>${$(t.content.format)}</label><div class="mut">${u(t.content.topic)} · 보관 ${u(t.at.slice(0, 10))}${t.reason ? " · " + u(t.reason) : ""}</div><div class="mut">원고 ${t.content.reviews.length}개${t.approval ? " · 확정 기록 있음" : ""}${t.storyboard ? " · 스토리보드 있음" : ""}</div><button onclick="restoreT('${u(t.key)}')">복원</button></div>`,
+                      `<div class="card"><label class="row"><input type="checkbox" aria-label="${u(t.content.id)} 선택" ${J.has(t.key) ? "checked" : ""} onchange="ttick('${u(t.key)}',this.checked)"><b class="cid">${u(t.content.id)}</b>${$(t.content.format)}</label><div class="mut">${u(t.content.topic)} · 보관 ${u(t.at.slice(0, 10))}${t.reason ? " · " + u(t.reason) : ""}</div><div class="mut">원고 ${t.content.reviews.length}개${t.approval ? " · 확정 기록 있음" : ""}${t.storyboard ? " · 스토리보드 있음" : ""}</div><button onclick="restoreT('${u(t.key)}')">복원</button> <button style="color:var(--bad);border-color:var(--bad)" onclick="purgeT('${u(t.key)}')">완전삭제</button></div>`,
                   )
                   .join("")
             : '<h1>휴지통</h1><p class="mut">휴지통이 비어 있습니다. 보관한 콘텐츠는 원고·이미지 기록과 함께 복원할 수 있습니다.</p>';
@@ -4218,3 +4257,4 @@
     </script>
   </body>
 </html>
+
