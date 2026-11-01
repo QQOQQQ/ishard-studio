@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "check": "node scripts/check.mjs",
+    "check": "node scripts/check.mjs && node scripts/check-trash.mjs",
     "format": "prettier --parser babel --print-width 110 --write src/worker.js",
     "dev": "wrangler dev",
     "deploy:dry": "wrangler deploy --dry-run --outdir dist",
