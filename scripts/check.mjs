@@ -20,6 +20,7 @@ const must = {
   "원고 확정은 사이트에서만: MCP 설명 문구": /원고 확정, 이미지 확정, 영상 생성, 게시는 이 연결로 할 수 없습니다|\\uC6D0\\uACE0 \\uD655\\uC815/,
   "Higgsfield AUDIO 규칙(음성·음악 금지)": /AUDIO must allow only ambient sound/,
   "화면 파일 불러오기": /import qt from "\.\/ui\.html"/,
+  "휴지통 완전 삭제는 소유자만": /name === "purgeTrash" && n !== "owner"/,
 };
 for (const [label, re] of Object.entries(must)) if (!re.test(src)) fail.push("빠짐: " + label);
 

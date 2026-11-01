@@ -1838,6 +1838,21 @@ function tr(e, t) {
     r
   );
 }
+function purgeTrashAction(e, t) {
+  if (t.confirm !== "완전 삭제") throw Error("완전 삭제 확인 문구가 필요합니다.");
+  let keys = t.keys;
+  if (!Array.isArray(keys) || !keys.length || keys.length > 100 || new Set(keys).size !== keys.length || keys.some((k) => typeof k != "string" || !k))
+    throw Error("완전 삭제할 휴지통 항목 1~100개를 선택해주세요.");
+  let items = keys.map((k) => (e.trash || []).find((x) => x.key === k));
+  if (items.some((x) => !x)) throw Error("휴지통 항목이 변경되었습니다. 목록을 새로 확인해주세요.");
+  let now = new Date().toISOString(), ids = [];
+  e.trash = e.trash.filter((x) => !keys.includes(x.key));
+  for (let x of items) {
+    ids.push(x.content?.id);
+    e.state.events.push({ at: now, message: (x.content?.id || x.key) + " · 휴지통에서 완전 삭제" });
+  }
+  return { purged: ids, count: ids.length, note: "Drive에 올린 실제 파일은 지우지 않습니다." };
+}
 function at(e, t) {
   let { selected: u, missing: r } = er(e, t),
     s = [],
@@ -3145,6 +3160,7 @@ var $e = {
   restore: (e, t) => wr(e, t.key),
   bulkArchive: (e, t) => Fr(e, { ids: t.ids }),
   bulkRestore: (e, t) => Ir(e, t.keys),
+  purgeTrash: (e, t) => v(e, (u) => purgeTrashAction(u, t)),
   updatePlan: (e, t) => __ishardUpdatePlan(e, t),
   savePlan: (e, t) => savePlanAction(e, t),
   replaceContent: (e, t) => replaceContentAction(e, t),
@@ -4431,6 +4447,8 @@ async function Xr(e, t, u = fetch) {
       return g({ error: "JSON \uD615\uC2DD \uC624\uB958" }, 400);
     }
     if (r.pathname === "/api/action") {
+      if (a?.name === "purgeTrash" && n !== "owner")
+        return g({ error: "완전 삭제는 소유자만 할 수 있습니다." }, 403);
       if (!Wr.has(n))
         return g(
           {

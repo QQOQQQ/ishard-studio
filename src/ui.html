@@ -145,6 +145,11 @@
         opacity: 0.45;
         cursor: not-allowed;
       }
+      button.del {
+        color: var(--bad);
+        border-color: var(--bad);
+        background: var(--badbg);
+      }
       button.p {
         background: var(--ac);
         border-color: var(--ac);
@@ -2975,6 +2980,13 @@
             restore: (e, t) => qr(e, t.key),
             bulkArchive: (e, t) => Fr(e, { ids: t.ids }),
             bulkRestore: (e, t) => jr(e, t.keys),
+            purgeTrash: (e, t) =>
+              y(e, (r) => {
+                let n = new Set(t.keys || []);
+                if (!n.size || ![...n].every((i) => (r.trash || []).some((a) => a.key === i)))
+                  throw Error("휴지통 항목이 변경되었습니다. 목록을 새로 확인해주세요.");
+                return ((r.trash = r.trash.filter((i) => !n.has(i.key))), { count: n.size });
+              }),
           },
           Lt = { addImage: (e, t) => Tt(e, t.requestId, t.slotId, t.asset) };
         function Pt(e, t) {
@@ -3460,6 +3472,17 @@
             let e = J.size;
             b("bulkRestore", { keys: [...J] }, `${e}건을 복원했습니다.`, () => J.clear());
           },
+          purgeT(e) {
+            let t = (v.trash || []).filter((r) => e.includes(r.key)),
+              r = t.map((n) => n.content?.id).join(", ");
+            t.length &&
+              confirm(
+                `휴지통에서 ${t.length}건을 완전히 삭제할까요?\n${r}\n\n원고·기획·메모 기록이 사라지고 되돌릴 수 없습니다. (Drive에 올린 실제 파일은 그대로 남습니다.)`,
+              ) &&
+              b("purgeTrash", { keys: e, confirm: "완전 삭제" }, `${t.length}건을 완전히 삭제했습니다.`, () =>
+                e.forEach((n) => J.delete(n)),
+              );
+          },
         });
         var rt = [
             ["today", "오늘"],
@@ -3521,7 +3544,7 @@
             C && Q?.role === "viewer" && es());
         }
         var Zr =
-          /\b(refMake|libAdd|newContent|archive|restoreT|addFact|review|approve|release|askRev|answer|withdraw|reqImages|regImg|choose|confirmImg|revise|legacyOk|saveH|video|pub|bulkGo|bulkRestore|bulkCheck|impStrategy|impScript|impBoard)\(/;
+          /\b(refMake|libAdd|newContent|archive|restoreT|addFact|review|approve|release|askRev|answer|withdraw|reqImages|regImg|choose|confirmImg|revise|legacyOk|saveH|video|pub|bulkGo|bulkRestore|purgeT|bulkCheck|impStrategy|impScript|impBoard)\(/;
         function es() {
           (document.querySelectorAll("#app [onclick], #app [onchange]").forEach((e) => {
             Zr.test(e.getAttribute("onclick") || e.getAttribute("onchange") || "") &&
@@ -3896,11 +3919,11 @@
         function ps() {
           let e = v.trash || [];
           return e.length
-            ? `<h1>휴지통</h1>${J.size ? `<div class="card sel row"><b>${J.size}건 선택</b><button class="p" onclick="bulkRestore()">선택 항목 복원</button></div>` : ""}` +
+            ? `<h1>휴지통</h1>${J.size ? `<div class="card sel row"><b>${J.size}건 선택</b><button class="p" onclick="bulkRestore()">선택 항목 복원</button>${Q?.role === "owner" || !C ? `<button class="del" onclick='purgeT(${u(JSON.stringify([...J]))})'>선택 항목 완전 삭제</button>` : ""}</div>` : ""}` +
                 e
                   .map(
                     (t) =>
-                      `<div class="card"><label class="row"><input type="checkbox" aria-label="${u(t.content.id)} 선택" ${J.has(t.key) ? "checked" : ""} onchange="ttick('${u(t.key)}',this.checked)"><b class="cid">${u(t.content.id)}</b>${$(t.content.format)}</label><div class="mut">${u(t.content.topic)} · 보관 ${u(t.at.slice(0, 10))}${t.reason ? " · " + u(t.reason) : ""}</div><div class="mut">원고 ${t.content.reviews.length}개${t.approval ? " · 확정 기록 있음" : ""}${t.storyboard ? " · 스토리보드 있음" : ""}</div><button onclick="restoreT('${u(t.key)}')">복원</button></div>`,
+                      `<div class="card"><label class="row"><input type="checkbox" aria-label="${u(t.content.id)} 선택" ${J.has(t.key) ? "checked" : ""} onchange="ttick('${u(t.key)}',this.checked)"><b class="cid">${u(t.content.id)}</b>${$(t.content.format)}</label><div class="mut">${u(t.content.topic)} · 보관 ${u(t.at.slice(0, 10))}${t.reason ? " · " + u(t.reason) : ""}</div><div class="mut">원고 ${t.content.reviews.length}개${t.approval ? " · 확정 기록 있음" : ""}${t.storyboard ? " · 스토리보드 있음" : ""}</div><div class="row"><button onclick="restoreT('${u(t.key)}')">복원</button>${Q?.role === "owner" || !C ? `<button class="del" onclick='purgeT(${u(JSON.stringify([t.key]))})'>완전 삭제</button>` : ""}</div></div>`,
                   )
                   .join("")
             : '<h1>휴지통</h1><p class="mut">휴지통이 비어 있습니다. 보관한 콘텐츠는 원고·이미지 기록과 함께 복원할 수 있습니다.</p>';
