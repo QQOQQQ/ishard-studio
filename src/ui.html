@@ -679,6 +679,10 @@
         font-size: 12px;
         color: var(--mut);
       }
+      .weekly-slot { padding: 10px 0; border-bottom: 1px solid var(--ln); }
+      .weekly-slot:last-child { border-bottom: 0; }
+      .weekly-slot > .row > b { font-size: 13px; }
+      .weekly-slot > div:nth-child(2) { font-size: 13px; margin: 4px 0; }
       .editorial-agenda { margin: 5px 0; }
       .editorial-agenda .agenda { margin: 0; }
       .editorial-evidence { margin: 0 6px 7px; padding: 7px 10px; border: 1px solid var(--ln); border-top: 0; border-radius: 0 0 7px 7px; }
@@ -3512,7 +3516,7 @@ function purgeArchivedContent(workspace, args) {
         var rt = [
             ["today", "오늘"],
             ["inbox", "검토함"],
-            ["refs", "레퍼런스"],
+            ["refs", "기획·스케줄"],
             ["table", "작업표"],
             ["cal", "캘린더"],
             ["feed", "피드"],
@@ -3872,13 +3876,30 @@ function purgeArchivedContent(workspace, args) {
               })
               .join("")}</details>`;
           },
+          weeklyPlanningOverview = () => {
+            const now = kstToday();
+            const start = new Date(now + 'T00:00:00Z');
+            const dow = start.getUTCDay();
+            start.setUTCDate(start.getUTCDate() - ((dow + 6) % 7));
+            const monday = start.toISOString().slice(0, 10);
+            const end = new Date(start); end.setUTCDate(end.getUTCDate() + 6);
+            const sunday = end.toISOString().slice(0, 10);
+            const items = v.contents.filter(c => c.date >= monday && c.date <= sunday).sort((a,b)=>a.date.localeCompare(b.date));
+            const notes = editorialNotesFromReports();
+            const rows = items.map(c => {
+              const status = O(c), isSunday = new Date(c.date + 'T00:00:00Z').getUTCDay() === 0;
+              const note = notes.get(c.id);
+              return `<div class="weekly-slot"><div class="row"><b>${u(c.date.slice(5))} · ${u(c.product.replace(/\\s*\\d+\\s*(?:ml|mL|g)\\b/gi,''))}</b>${$(c.format)}${isSunday ? '<span class="mut">일요일 · 편성 재검토</span>' : ''}</div><div>${u(c.topic)}</div><div class="row" style="margin-top:5px"><button onclick="go('${u(c.id)}','${M(status)}')">콘텐츠 열기</button>${note ? '<span class="mut">선정 코멘트 기록</span>' : ''}</div>${editorialEvidencePanel(c,notes)}</div>`;
+            }).join('');
+            return `<div class="card"><b>이번 주 스케줄 · ${u(monday.slice(5))}–${u(sunday.slice(5))}</b><p class="mut">레퍼런스 조사 → 기획 근거 확인 → 스케줄 → 원고·제작. 현재 저장된 일정을 보여주며 여기서는 자동 변경하지 않아요.</p>${rows || '<p class="mut">이번 주 예정된 콘텐츠가 없어요.</p>'}<div class="row" style="margin-top:9px"><button onclick="view('cal')">전체 캘린더 보기</button></div></div>`;
+          },
           refView = () => {
             let ws = refWeeks(),
-              h = '<h1>레퍼런스</h1>';
+              h = '<h1>기획·스케줄</h1>' + weeklyPlanningOverview();
             if (!ws.length)
               return (
                 h +
-                '<div class="card"><b>아직 분석이 없어요</b><p class="mut">매일 아침 조사 작업이 참고 계정과 급상승 콘텐츠를 분석해 여기에 올립니다. 아이샤드 기획 초안도 함께 와요.</p></div>' +
+                '<div class="card"><b>아직 저장된 레퍼런스 조사가 없어요</b><p class="mut">스케줄은 유지되며 조사 자료가 저장되면 이 아래 연결돼요.</p></div>' +
                 refLibList()
               );
             let rec = ws.find((x) => x.week === refSel) || ws[0],
@@ -3889,11 +3910,11 @@ function purgeArchivedContent(workspace, args) {
             let ds = refArr(w.drafts);
             ds.length &&
               (h +=
-                `<h2>아이샤드 기획 초안 ${ds.length}</h2>` +
+                `<details class="card"><summary><b>다음 콘텐츠 기획 후보 ${ds.length}건</b> <span class="mut">선택해서 확인</span></summary>` +
                 ds.map((d) => refDraftCard(d, w)).join("") +
-                '<p class="mut">초안은 공식 근거 안에서만 썼어요. 콘텐츠로 만든 뒤 기획 탭에서 확인하고, 장면 구성은 스토리보드 단계에서 참고하세요.</p>');
+                '<p class="mut">미승인 후보입니다. 실제 일정은 위 스케줄과 캘린더를 기준으로 확인해 주세요.</p></details>');
             let it = refArr(w.items);
-            it.length && (h += `<h2>분석한 콘텐츠 ${it.length}</h2>` + it.map(refItemCard).join(""));
+            it.length && (h += `<details class="card"><summary><b>분석 원본 ${it.length}건</b></summary>` + it.map(refItemCard).join("") + '</details>');
             return h + refLibList();
           },
           refProductCard = (c) => {
