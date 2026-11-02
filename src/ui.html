@@ -679,6 +679,15 @@
         font-size: 12px;
         color: var(--mut);
       }
+      .editorial-agenda { margin: 5px 0; }
+      .editorial-agenda .agenda { margin: 0; }
+      .editorial-evidence { margin: 0 6px 7px; padding: 7px 10px; border: 1px solid var(--ln); border-top: 0; border-radius: 0 0 7px 7px; }
+      .editorial-evidence summary { cursor: pointer; color: var(--ac); font-size: 12px; font-weight: 650; min-height: 26px; }
+      .editorial-evidence-body { padding: 5px 0; overflow-wrap: anywhere; font-size: 13px; line-height: 1.6; }
+      .editorial-evidence-body p { margin: 7px 0; }
+      .editorial-evidence-body b { display: inline-block; width: 62px; }
+      .editorial-evidence-body a { color: var(--ac); }
+      .editorial-evidence-body small { font-size: 11px; }
       .agenda {
         display: grid;
         grid-template-columns: 64px 1fr auto;
@@ -3693,15 +3702,63 @@ function purgeArchivedContent(workspace, args) {
             cs(e + "-" + o(t + 1))
           );
         }
+        // Read-only editorial notes: reuse the existing saved report, never mutate content or approvals.
+        function editorialNotesFromReports() {
+          const reports = Array.isArray(v.reports) ? v.reports : [];
+          const report = reports.filter((x) => /^ISHARD-EDITORIAL-REVIEW-/.test(String(x?.id || '')) && typeof x.body === 'string')
+            .sort((a, b) => String(b.at || b.id).localeCompare(String(a.at || a.id)))[0];
+          const notes = new Map();
+          if (!report) return notes;
+          for (const section of report.body.split(/^### /m).slice(1)) {
+            const id = section.match(/^- 콘텐츠 ID: `([^`]+)`/m)?.[1];
+            if (!id) continue;
+            const pick = (label) => {
+              const prefix = '- **' + label + ':** ';
+              const line = section.split('\n').find((x) => x.startsWith(prefix));
+              return line ? line.slice(prefix.length).trim() : '';
+            };
+            notes.set(id, {
+              topic: pick('왜 이 주제인가'), product: pick('왜 이 제품인가'),
+              sources: pick('원본 영상(기존 자료 기준)'), mood: pick('피드무드 코멘트'),
+              decision: pick('판단')
+            });
+          }
+          return notes;
+        }
+        function editorialEvidencePanel(c, notes) {
+          const note = notes.get(c.id);
+          const p = c.plan || {};
+          const extra = p.planningComment || {};
+          const topic = note?.topic || extra.whyTopic || p.purpose || '';
+          const product = note?.product || extra.whyProduct || p.uspReason || p.strategyV2?.fit?.selectionReason || '';
+          const mood = note?.mood || extra.feedMood || p.feedMood || '';
+          const decision = note?.decision || extra.decision || '';
+          const sourceText = note?.sources || extra.reference || '';
+          const urls = [...new Set([...(sourceText.match(/https:\/\/[^\s|]+/g) || []),
+            ...(Array.isArray(p.referenceApplication) ? p.referenceApplication.map((x) => x?.url) : [])]
+            .filter((url) => { try { return new URL(url).protocol === 'https:'; } catch { return false; } }))].slice(0, 5);
+          const links = urls.length
+            ? urls.map((url, i) => `<a href="${u(url)}" target="_blank" rel="noopener noreferrer">원본 ${i + 1}</a>`).join(' · ')
+            : '<span class="mut">원본 근거 확인 필요</span>';
+          if (!note && !topic && !product && !urls.length) return '';
+          return `<details class="editorial-evidence"><summary>기획 근거 보기</summary><div class="editorial-evidence-body">` +
+            (topic ? `<p><b>주제</b> ${u(topic)}</p>` : '') +
+            (product ? `<p><b>제품</b> ${u(product)}</p>` : '') +
+            `<p><b>참고</b> ${links}</p>` +
+            `<p><b>피드 무드</b> ${mood ? u(mood) : '<span class="mut">기획 보강 필요</span>'}</p>` +
+            (decision ? `<p class="mut">${u(decision)}</p>` : '') +
+            `<small class="mut">기존 조사 기록 기준 · 원본 실시간 재검증 전</small></div></details>`;
+        }
         function cs(e) {
           let t = v.contents.filter((r) => r.date.startsWith(e)).sort((r, s) => r.date.localeCompare(s.date));
+          const notes = editorialNotesFromReports();
           return (
             `<h2>이 달 일정 (${t.length})</h2>` +
             (t
               .map((r) => {
                 let s = O(r),
                   o = new Date(r.date + "T00:00:00");
-                return `<button class="agenda" onclick="go('${u(r.id)}','${M(s)}')"><span class="ad">${o.getMonth() + 1}/${o.getDate()} ${"일월화수목금토"[o.getDay()]}</span><span class="at">${u(r.topic)}<small>${u(r.format)} · ${u(r.id)}</small></span>${$(s.l, s.lane === "waiting" ? "wait" : "")}</button>`;
+                return `<div class="editorial-agenda"><button class="agenda" onclick="go('${u(r.id)}','${M(s)}')"><span class="ad">${o.getMonth() + 1}/${o.getDate()} ${"일월화수목금토"[o.getDay()]}</span><span class="at">${u(r.topic)}<small>${u(r.format)} · ${u(r.id)}</small></span>${$(s.l, s.lane === "waiting" ? "wait" : "")}</button>${editorialEvidencePanel(r, notes)}</div>`;
               })
               .join("") || '<p class="mut">이 달에 예정된 콘텐츠가 없습니다.</p>')
           );
